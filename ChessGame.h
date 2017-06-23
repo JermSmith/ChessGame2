@@ -19,16 +19,20 @@ public:
 	CPiece* GetBoardData(int, int);
 
 	sf::Sprite* GetBoardTileSpr();
+
+	void LeftClick(sf::Event);
 	
 private:
 
 	std::vector<std::vector<CPiece>> BoardData;
-	CPiece* PointerToBoardData;
+	CPiece* ptrBoardData;
 
 	sf::Texture BoardTexture;
 
 	sf::Sprite BoardTileSpr;
-	sf::Sprite* PointerToBoardTileSpr;
+	sf::Sprite* ptrBoardTileSpr;
 
 	sf::Texture PiecesTexture;
+
+	std::pair<int, int> PrevCoord = std::make_pair(0,0); // initial PrevClickCoord can never be clicked
 };

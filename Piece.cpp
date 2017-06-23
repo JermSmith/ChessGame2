@@ -3,6 +3,7 @@
 
 CPiece::CPiece()
 {
+	SetPieceType(EPiece::empty);
 	return;
 }
 
@@ -10,16 +11,20 @@ CPiece::CPiece()
 EColour CPiece::GetColour() { return Colour; }
 EPiece CPiece::GetPieceType() { return PieceType; }
 ERange CPiece::GetRangeType() { return RangeType; }
-std::vector<int> CPiece::GetPosition() { return Position; }
-sf::Sprite* CPiece::GetSprite() { PointerToSprite = &Sprite; return PointerToSprite; }
-// sets the pointer to point to Sprite, and returns the pointer
+std::pair<int, int> CPiece::GetPosition() { return Position; }
+sf::Sprite* CPiece::GetSprite() { ptrSprite = &Sprite; return ptrSprite; } // sets the pointer to point to Sprite, and returns the pointer
+std::vector<std::pair<int, int>> CPiece::GetValidDestinations() // returns a vector of pairs of all valid destinations
+{
+	return{ std::make_pair(0,0), std::make_pair(0,7), std::make_pair(7,0), std::make_pair(7,7) };
+
+}
 
 void CPiece::SetColour(EColour GivenColour) { Colour = GivenColour; return; }
 void CPiece::SetPieceType(EPiece GivenPieceType) { PieceType = GivenPieceType; return; }
 void CPiece::SetRangeType(ERange GivenRangeType) { RangeType = GivenRangeType; return; }
-void CPiece::SetPosition(std::vector<int> GivenPosition) { Position = GivenPosition; return; }
+void CPiece::SetPosition(std::pair<int, int> position) { Position = position; return; }
 
-bool CPiece::IsValidMove(std::vector<int>)
+bool CPiece::IsValidDestination(int file, int rank)
 {
 	return false;
 }

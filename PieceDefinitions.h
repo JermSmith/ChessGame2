@@ -110,6 +110,8 @@ class CPawn : public CPiece
 public:
 	CPawn(); // constructor
 
+	std::vector<std::pair<int, int>> GetValidDestinations();
+
 	bool CPawn::IsValidMove(std::vector<int>)
 	{
 		return false;

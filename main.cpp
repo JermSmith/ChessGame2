@@ -1,40 +1,33 @@
 #pragma once
 #include "ChessGame.h"
 
+void PlayGame();
+
+CGame Game;
+
 // main file
 int main()
 {
-	CGame Game;
+	PlayGame();
+	return 0;
+}
 
+void PlayGame()
+{
 	sf::RenderWindow window(sf::VideoMode(PIX_MPL * 11, PIX_MPL * 8), "Chess Game");
 	while (window.isOpen())
 	{
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
-			if (event.type == sf::Event::Closed)
-				window.close();
-			
+			// check different event types
+			if (event.type == sf::Event::Closed) { window.close(); }
+
 			if (event.type == sf::Event::MouseButtonReleased)
 			{
 				if (event.mouseButton.button == sf::Mouse::Left)
 				{
-					int xCoord = event.mouseButton.x;
-					int yCoord = event.mouseButton.y;
-					int file = static_cast<int>(floor(xCoord / PIX_MPL));
-					int rank = 7 - static_cast<int>(floor(yCoord / PIX_MPL));
-					int selectedTeam = to_int(Game.GetBoardData(file, rank)->GetColour());
-					int selectedPiece = to_int(Game.GetBoardData(file, rank)->GetPieceType());
-
-					sf::Color OriginalShade = Game.GetBoardData(file, rank)->GetSprite()->getColor();
-					if (OriginalShade == sf::Color(255, 255, 255)) //white
-					{
-						Game.GetBoardData(file, rank)->GetSprite()->setColor(sf::Color(255, 255, 0)); //yellow
-					}
-					else
-					{
-						Game.GetBoardData(file, rank)->GetSprite()->setColor(sf::Color(255, 255, 255)); //white
-					}
+					Game.LeftClick(event);
 				}
 			}
 		}
@@ -54,5 +47,10 @@ int main()
 		window.display();
 	}
 
-	return 0;
+	// LOOP:
+	//	receive player click (must be for valid team) - highlight piece
+	//	determine valid destinations - highlight these squares
+	//	receive player click
+	//	either restart the loop, or place piece in new location
+	return;
 }

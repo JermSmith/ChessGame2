@@ -62,27 +62,28 @@ public:
 	virtual EColour GetColour();
 	virtual EPiece GetPieceType();
 	virtual ERange GetRangeType();
-	virtual std::vector<int> GetPosition();
+	virtual std::pair<int, int> GetPosition();
 	virtual sf::Sprite* GetSprite(); // returns a pointer to an object of type sf::Sprite
+	virtual std::vector<std::pair<int, int>> GetValidDestinations();
 
 	virtual void SetColour(EColour);
 	virtual void SetPieceType(EPiece);
 	virtual void SetRangeType(ERange);
-	virtual void SetPosition(std::vector<int>);
+	virtual void SetPosition(std::pair<int, int>);
 
-	virtual bool IsValidMove(std::vector<int>);
+	virtual bool IsValidDestination(int, int);
 	virtual void Move(std::vector<int>);
 
 private:
 	EColour Colour;
 	EPiece PieceType;
 	ERange RangeType;
-	std::vector<int> Position;
+	std::pair<int, int> Position;
 
 	sf::Texture Texture;
 	sf::IntRect TextureRect;
 	sf::Sprite Sprite; // actual Sprite
-	sf::Sprite* PointerToSprite; // points to Sprite
+	sf::Sprite* ptrSprite; // points to Sprite
 	sf::Color SpriteColour;
 
 };
