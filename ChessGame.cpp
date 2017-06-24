@@ -120,12 +120,85 @@ sf::Sprite* CGame::GetBoardTileSpr()
 
 void CGame::LeftClick(sf::Event event)
 {
-	int file = static_cast<int>(floor(event.mouseButton.x / PIX_MPL)); // get file from x-location of click
-	int rank = 7 - static_cast<int>(floor(event.mouseButton.y / PIX_MPL)); // get rank from y-location of click
+	std::pair<int, int> newClick = std::make_pair(static_cast<int>(floor(event.mouseButton.x / PIX_MPL)), \
+		7 - static_cast<int>(floor(event.mouseButton.y / PIX_MPL))); // get file & rank from x- and y-location of click
 
-	// leave the LeftClick function early, if click was off of board, or on a blank spot
-	if ((file < 0 || file > 7 || rank < 0 || rank > 7) || (BoardData[PrevCoord.first][PrevCoord.second].GetPieceType() == EPiece::empty))
+	// leave the LeftClick function early, if click was off of board
+	bool bOffBoard = bClickOffBoard(newClick);
+	if (bOffBoard) { return; }
+
+	if (bIsDestination(newClick)) // clicked on a valid destination (also accounts for castling)
 	{
+		HighlightOff(oldClick);
+		MoveFromTo(oldClick, newClick);
+		DestList = {};
+		switchTeam();
+	}
+	else if ((BoardData[oldClick.first][oldClick.second].GetColour() != currentTeam) && \
+		(BoardData[newClick.first][newClick.second].GetColour() == currentTeam)) // first click was OFF our team, second click was ON our team
+	{
+		BoardData[newClick.first][newClick.second].calcDestinations();
+		HighlightOn(newClick); // destinations must be calculated before HighlightOn() is called
+		DestList = BoardData[newClick.first][newClick.second].GetDestinations();
+	}
+	
+	
+	oldClick = newClick;
+	
+	/*
+	//bool bGameIsWon = false;
+	//EColour currentTeam = EColour::white;
+
+	//while(!bGameIsWon)
+	//{
+		//std::pair newClick = receiveClick();
+		//If (bIsDestination(newClick))
+		//{
+			//accounts for castling
+			//Piece(oldClick).highlightOff(); //also unhighlights destinations, using private dest property
+			//Piece(oldClick).MoveTo(newClick);
+			//DestList = {};
+			//switchTeam();
+		//}
+		//Else if ((Piece(oldClick).GetColour() != currentTeam) && (Piece(newClick).GetColour() == currentTeam))
+		//{
+			//Piece(newClick).calcDestinations();
+			//Piece(newClick).highlightOn(); //also highlights destinations, using private dest property
+			//DestList = Piece(newClick).getDestinations();
+		//}
+		Else if ((Piece(oldClick).GetColour() == currentTeam) && (Piece(newClick).GetColour() != currentTeam))
+		{
+			Piece(oldClick).highlightOff(); //also unhighlights destinations, using private dest property
+			DestList = {};
+		}
+		Else if ((Piece(oldClick).GetColour() == currentTeam) && (Piece(newClick).GetColour() == currentTeam))
+		{
+			If (oldClick == newClick)
+			{
+				Piece(newClick).HighlightToggle();
+				DestListToggle(Piece(newClick).GetDestinations());
+			}
+			Else {}
+
+		}
+	}
+
+
+
+
+
+
+	*/
+
+	return;
+}
+
+bool CGame::bClickOffBoard(std::pair<int, int> click)
+{
+	bool ClickOffBoard = false;
+	if (click.first < 0 || click.first > 7 || click.second < 0 || click.second > 7)
+	{
+		ClickOffBoard = true;
 		for (int File = 0; File <= 7; File++)
 		{
 			for (int Rank = 0; Rank <= 7; Rank++)
@@ -133,79 +206,67 @@ void CGame::LeftClick(sf::Event event)
 				BoardData[File][Rank].GetSprite()->setColor(sf::Color(255, 255, 255)); // set colour of all spaces to white
 			}
 		}
-		PrevCoord.first = 0;
-		PrevCoord.second = 0;
-	return;
 	}
+	return ClickOffBoard;
+}
 
-	std::vector<std::pair<int, int>> CurrDest = BoardData[file][rank].GetValidDestinations();
-	std::vector<std::pair<int, int>> PrevDest = BoardData[PrevCoord.first][PrevCoord.second].GetValidDestinations();
-
-	// bool destFound = false;
-	// loop through previous destinations
-	//		if found, set destFound = true;
-	//		move the piece from original spot to new spot
-	//		set old spot to empty
-	//		break loop;
-	// if (!destFound) {
-	//		if clicked same space again {
-	//			set colour of space to white
-	//			set colour of dest's to white
-	//
-
-	if ((file == PrevCoord.first) && (rank == PrevCoord.second)) // clicked the same space again
+bool CGame::bIsDestination(std::pair<int, int> click)
+{
+	bool IsDestination = false;
+	// returns true if the inputted click matches any of the destinations in the private property, DestList.
+	for (unsigned int dest = 0; dest < DestList.size(); dest++)
 	{
-		BoardData[file][rank].GetSprite()->setColor(sf::Color(255, 255, 255)); // set colour of clicked space to white
-		for (unsigned int dnum = 0; dnum < CurrDest.size(); dnum++)
+		if (click.first == DestList[dest].first && click.second == DestList[dest].second)
 		{
-			BoardData[CurrDest[dnum].first][CurrDest[dnum].second].GetSprite()->setColor(sf::Color(255, 255, 255)); // set colour of dest's to white
+			IsDestination = true;
+			break;
 		}
-		PrevCoord.first = 0;
-		PrevCoord.second = 0; // these can never be clicked, so 3 consecutive clicks on a space will work
 	}
-	else // clicked a space that was not the previously-clicked space
-	{
-		bool DestFound = false;
-		for (unsigned int dnum1 = 0; dnum1 < PrevDest.size(); dnum1++) // check all dest's from prev space for current click
-		{
-			if ((file == PrevDest[dnum1].first) && (rank == PrevDest[dnum1].second)) // clicked a valid destination
-			{
-				DestFound = true;
-				BoardData[file][rank] = BoardData[PrevCoord.first][PrevCoord.second]; // clicked spot obtains piece from previous clicked spot
-				BoardData[PrevCoord.first][PrevCoord.second].SetPieceType(EPiece::empty);
-				EPiece newspot = BoardData[file][rank].GetPieceType();
-				EPiece oldspot = BoardData[PrevCoord.first][PrevCoord.second].GetPieceType();
-				for (unsigned int dnum2 = 0; dnum2 < PrevDest.size(); dnum2++)
-				{
-					BoardData[PrevDest[dnum2].first][PrevDest[dnum2].second]; // colour all previous destinations white
-				}
-				break;
-			}
-		}
-		if (!DestFound)
-		{
-			// did not click same square, and clicked a non-destination space
-			BoardData[PrevCoord.first][PrevCoord.second].GetSprite()->setColor(sf::Color(255, 255, 255)); // prev clicked space set white
-			for (unsigned int dnum3 = 0; dnum3 < CurrDest.size(); dnum3++)
-			{
-				BoardData[PrevDest[dnum3].first][PrevDest[dnum3].second].GetSprite()->setColor(sf::Color(255, 255, 255)); // prev dest's white
-			}
+	return IsDestination;
+}
 
-			if (BoardData[file][rank].GetPieceType() != EPiece::empty) // did not click an empty space (clicked space has a piece)
-			{
-				BoardData[file][rank].GetSprite()->setColor(sf::Color(255, 255, 0)); // new clicked space set yellow
-				for (unsigned int dnum4 = 0; dnum4 < CurrDest.size(); dnum4++)
-				{
-					BoardData[CurrDest[dnum4].first][CurrDest[dnum4].second].GetSprite()->setColor(sf::Color(170, 100, 240)); // new destinations purple
-				}
-			}
-			// else, clicked an empty, non-destination space
-		}
-		PrevCoord.first = file;
-		PrevCoord.second = rank;
+// unhighlight the specified space, as well as that piece's destinations
+void CGame::HighlightOff(std::pair<int, int> click)
+{
+	BoardData[click.first][click.second].GetSprite()->setColor(sf::Color(255, 255, 255));
+	for (unsigned int dest = 0; dest < BoardData[click.first][click.second].GetDestinations().size(); dest++)
+	{
+		int DestFile = BoardData[click.first][click.second].GetDestinations()[dest].first;
+		int DestRank = BoardData[click.first][click.second].GetDestinations()[dest].second;
+		BoardData[DestFile][DestRank].GetSprite()->setColor(sf::Color(255, 255, 255));
 	}
 	return;
 }
 
+// highlight the specified piece, as well as that piece's destinations
+void CGame::HighlightOn(std::pair<int, int> click)
+{
+	BoardData[click.first][click.second].GetSprite()->setColor(sf::Color(255, 255, 0));
+	for (unsigned int dest = 0; dest < BoardData[click.first][click.second].GetDestinations().size(); dest++)
+	{
+		int DestFile = BoardData[click.first][click.second].GetDestinations()[dest].first;
+		int DestRank = BoardData[click.first][click.second].GetDestinations()[dest].second;
+		BoardData[DestFile][DestRank].GetSprite()->setColor(sf::Color(255, 0, 255));
+	}
+	return;
+}
 
+// places a copy of the original piece in the new location, and destroys the original piece.
+void CGame::MoveFromTo(std::pair<int, int> oldClick, std::pair<int, int> newClick)
+{
+	BoardData[newClick.first][newClick.second] = BoardData[oldClick.first][oldClick.second];
+	BoardData[oldClick.first].erase(BoardData[oldClick.first].begin() + oldClick.second);
+	std::vector<CPiece>::iterator it = BoardData[oldClick.first].emplace(BoardData[oldClick.first].begin() + oldClick.second);
+	//BoardData[oldClick.first].emplace
+	int r = 5;
+	return;
+}
+
+// switches the team whose turn it is to move
+void CGame::switchTeam()
+{
+	if (currentTeam == EColour::white) { currentTeam = EColour::black; }
+	else { currentTeam = EColour::white; }
+	return;
+}
 

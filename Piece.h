@@ -52,6 +52,7 @@ enum class ERange : int
 {
 	varies = 0,
 	fixed = 1,
+	empty = 9,
 };
 
 class CPiece
@@ -59,31 +60,34 @@ class CPiece
 public:
 	CPiece(); // constructor
 
-	virtual EColour GetColour();
-	virtual EPiece GetPieceType();
-	virtual ERange GetRangeType();
-	virtual std::pair<int, int> GetPosition();
-	virtual sf::Sprite* GetSprite(); // returns a pointer to an object of type sf::Sprite
-	virtual std::vector<std::pair<int, int>> GetValidDestinations();
+	EColour GetColour();
+	EPiece GetPieceType();
+	ERange GetRangeType();
+	std::pair<int, int> GetPosition();
+	sf::Sprite* GetSprite(); // returns a pointer to an object of type sf::Sprite
+	std::vector<std::pair<int, int>> GetDestinations();
+	void calcDestinations();
 
-	virtual void SetColour(EColour);
-	virtual void SetPieceType(EPiece);
-	virtual void SetRangeType(ERange);
-	virtual void SetPosition(std::pair<int, int>);
+	void SetColour(EColour);
+	void SetPieceType(EPiece);
+	void SetRangeType(ERange);
+	void SetPosition(std::pair<int, int>);
 
-	virtual bool IsValidDestination(int, int);
-	virtual void Move(std::vector<int>);
+	//bool IsValidDestination(int, int);
+	void Move(std::vector<int>);
+
+	//void highlightOff();
 
 private:
 	EColour Colour;
 	EPiece PieceType;
 	ERange RangeType;
 	std::pair<int, int> Position;
+	std::vector<std::pair<int, int>> Destinations;
 
 	sf::Texture Texture;
 	sf::IntRect TextureRect;
 	sf::Sprite Sprite; // actual Sprite
 	sf::Sprite* ptrSprite; // points to Sprite
-	sf::Color SpriteColour;
 
 };

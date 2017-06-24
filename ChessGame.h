@@ -34,5 +34,14 @@ private:
 
 	sf::Texture PiecesTexture;
 
-	std::pair<int, int> PrevCoord = std::make_pair(0,0); // initial PrevClickCoord can never be clicked
+	// used for LeftClick function
+	EColour currentTeam = EColour::white;
+	std::pair<int, int> oldClick = std::make_pair(0, 0);
+	bool bClickOffBoard(std::pair<int, int>);
+	std::vector<std::pair<int, int>> DestList = {};
+	bool bIsDestination(std::pair<int, int>);
+	void HighlightOff(std::pair<int, int>);
+	void HighlightOn(std::pair<int, int>);
+	void MoveFromTo(std::pair<int, int>, std::pair<int, int>);
+	void switchTeam();
 };
