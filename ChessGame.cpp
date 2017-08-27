@@ -106,6 +106,12 @@ void CGame::Reset()
 	return;
 }
 
+sf::Sprite *CGame::GetBoardDataSprite(int file, int rank)
+{
+	ptrBoardDataSpr = BoardData[file][rank].GetSprite();
+	return ptrBoardDataSpr;
+}
+
 CPiece* CGame::GetBoardData(int file, int rank)
 {
 	ptrBoardData = &BoardData[file][rank];
@@ -126,88 +132,91 @@ void CGame::LeftClick(sf::Event event)
 	// leave the LeftClick function early, if click was off of board
 	bool bOffBoard = bClickOffBoard(newClick);
 	if (bOffBoard) { return; }
-
+	
+	// NOT YET TROUBLESHOOTED
 	if (bIsDestination(newClick)) // clicked on a valid destination (also accounts for castling)
 	{
-		HighlightOff(oldClick);
+		PieceAt(oldClick)->highlightOff();
+		for (unsigned int dest = 0; dest < DestList.size(); dest++)
+		{
+			PieceAt(std::make_pair(DestList[dest].first, DestList[dest].second))->highlightOff();
+		}
 		MoveFromTo(oldClick, newClick);
+		oldClick = { std::make_pair(0,4) };
+		newClick = { std::make_pair(0,5) };
 		DestList = {};
 		switchTeam();
 	}
-	else if ((BoardData[oldClick.first][oldClick.second].GetColour() != currentTeam) && \
-		(BoardData[newClick.first][newClick.second].GetColour() == currentTeam)) // first click was OFF our team, second click was ON our team
+
+	// NOT YET TROUBLESHOOTED
+	// first click was NOT ON our team, second click was ON our team
+	else if ((PieceAt(oldClick)->GetColour() != currentTeam) && (PieceAt(newClick)->GetColour() == currentTeam))
 	{
-		BoardData[newClick.first][newClick.second].calcDestinations();
-		HighlightOn(newClick); // destinations must be calculated before HighlightOn() is called
-		DestList = BoardData[newClick.first][newClick.second].GetDestinations();
+		PieceAt(newClick)->highlightOn();
+		PieceAt(newClick)->calcDestinations();
+		DestinationHighlightOn(newClick);
+		DestList = PieceAt(newClick)->GetDestinations();
+		int a = 1;
 	}
-	
-	
+
+	// NOT YET TROUBLESHOOTED
+	// first click was ON our team, second click was NOT ON our team (also not a destination, since checked earlier)
+	else if ((PieceAt(oldClick)->GetColour() == currentTeam) && (PieceAt(newClick)->GetColour() != currentTeam))
+	{
+		PieceAt(oldClick)->highlightOff();
+		DestinationHighlightOff(oldClick);
+		DestList = {};
+	}
+
+	//VALIDATED
+	// first click was ON our team, second click was ON our team (could be same piece or different)
+	else if ((PieceAt(oldClick)->GetColour() == currentTeam) && (PieceAt(newClick)->GetColour() == currentTeam))
+	{
+
+		//VALIDATED
+		if (oldClick == newClick) // clicked on same piece twice in a row
+		{
+			PieceAt(newClick)->highlightToggle();
+			DestListToggle(newClick); //kind of want this line to be "DestList = DestListToggle(newClick);" ...
+		}
+
+		//VALIDATED
+		else // must have clicked a new piece of our team's colour
+		{
+			PieceAt(oldClick)->highlightOff();
+			PieceAt(newClick)->calcDestinations();
+			PieceAt(newClick)->highlightOn();
+			// overwrite CGame's list of destinations with that of the most recent click
+			DestList = BoardData[newClick.first][newClick.second].GetDestinations();
+		}
+
+	}
 	oldClick = newClick;
 	
-	/*
-	//bool bGameIsWon = false;
-	//EColour currentTeam = EColour::white;
-
-	//while(!bGameIsWon)
-	//{
-		//std::pair newClick = receiveClick();
-		//If (bIsDestination(newClick))
-		//{
-			//accounts for castling
-			//Piece(oldClick).highlightOff(); //also unhighlights destinations, using private dest property
-			//Piece(oldClick).MoveTo(newClick);
-			//DestList = {};
-			//switchTeam();
-		//}
-		//Else if ((Piece(oldClick).GetColour() != currentTeam) && (Piece(newClick).GetColour() == currentTeam))
-		//{
-			//Piece(newClick).calcDestinations();
-			//Piece(newClick).highlightOn(); //also highlights destinations, using private dest property
-			//DestList = Piece(newClick).getDestinations();
-		//}
-		Else if ((Piece(oldClick).GetColour() == currentTeam) && (Piece(newClick).GetColour() != currentTeam))
-		{
-			Piece(oldClick).highlightOff(); //also unhighlights destinations, using private dest property
-			DestList = {};
-		}
-		Else if ((Piece(oldClick).GetColour() == currentTeam) && (Piece(newClick).GetColour() == currentTeam))
-		{
-			If (oldClick == newClick)
-			{
-				Piece(newClick).HighlightToggle();
-				DestListToggle(Piece(newClick).GetDestinations());
-			}
-			Else {}
-
-		}
-	}
-
-
-
-
-
-
-	*/
-
 	return;
+}
+
+//VALIDATED
+CPiece *CGame::PieceAt(std::pair<int, int> click)
+{
+	return &BoardData[click.first][click.second];
 }
 
 bool CGame::bClickOffBoard(std::pair<int, int> click)
 {
-	bool ClickOffBoard = false;
+	bool bClickOffBoard = false;
 	if (click.first < 0 || click.first > 7 || click.second < 0 || click.second > 7)
 	{
-		ClickOffBoard = true;
+		bClickOffBoard = true;
 		for (int File = 0; File <= 7; File++)
 		{
 			for (int Rank = 0; Rank <= 7; Rank++)
 			{
-				BoardData[File][Rank].GetSprite()->setColor(sf::Color(255, 255, 255)); // set colour of all spaces to white
+				PieceAt(std::make_pair(File, Rank))->GetSprite()->setColor(sf::Color(255, 255, 255)); // set colour of all spaces to white
 			}
 		}
 	}
-	return ClickOffBoard;
+	return bClickOffBoard;
 }
 
 bool CGame::bIsDestination(std::pair<int, int> click)
@@ -225,15 +234,16 @@ bool CGame::bIsDestination(std::pair<int, int> click)
 	return IsDestination;
 }
 
+/*
 // unhighlight the specified space, as well as that piece's destinations
 void CGame::HighlightOff(std::pair<int, int> click)
 {
-	BoardData[click.first][click.second].GetSprite()->setColor(sf::Color(255, 255, 255));
-	for (unsigned int dest = 0; dest < BoardData[click.first][click.second].GetDestinations().size(); dest++)
+	PieceAt(click).GetSprite()->setColor(sf::Color(255, 255, 255));
+	for (unsigned int dest = 0; dest < PieceAt(click).GetDestinations().size(); dest++)
 	{
-		int DestFile = BoardData[click.first][click.second].GetDestinations()[dest].first;
-		int DestRank = BoardData[click.first][click.second].GetDestinations()[dest].second;
-		BoardData[DestFile][DestRank].GetSprite()->setColor(sf::Color(255, 255, 255));
+		int DestFile = PieceAt(click).GetDestinations()[dest].first;
+		int DestRank = PieceAt(click).GetDestinations()[dest].second;
+		PieceAt(std::make_pair(DestFile, DestRank)).GetSprite()->setColor(sf::Color(255, 255, 255));
 	}
 	return;
 }
@@ -241,24 +251,99 @@ void CGame::HighlightOff(std::pair<int, int> click)
 // highlight the specified piece, as well as that piece's destinations
 void CGame::HighlightOn(std::pair<int, int> click)
 {
-	BoardData[click.first][click.second].GetSprite()->setColor(sf::Color(255, 255, 0));
-	for (unsigned int dest = 0; dest < BoardData[click.first][click.second].GetDestinations().size(); dest++)
+	PieceAt(click).GetSprite()->setColor(sf::Color(255, 255, 0));
+	for (unsigned int dest = 0; dest < PieceAt(click).GetDestinations().size(); dest++)
 	{
-		int DestFile = BoardData[click.first][click.second].GetDestinations()[dest].first;
-		int DestRank = BoardData[click.first][click.second].GetDestinations()[dest].second;
-		BoardData[DestFile][DestRank].GetSprite()->setColor(sf::Color(255, 0, 255));
+		int DestFile = PieceAt(click).GetDestinations()[dest].first;
+		int DestRank = PieceAt(click).GetDestinations()[dest].second;
+		PieceAt(std::make_pair(DestFile, DestRank)).GetSprite()->setColor(sf::Color(255, 0, 255));
 	}
 	return;
 }
 
-// places a copy of the original piece in the new location, and destroys the original piece.
-void CGame::MoveFromTo(std::pair<int, int> oldClick, std::pair<int, int> newClick)
+void CGame::HighlightToggle(std::pair<int, int> click)
 {
-	BoardData[newClick.first][newClick.second] = BoardData[oldClick.first][oldClick.second];
-	BoardData[oldClick.first].erase(BoardData[oldClick.first].begin() + oldClick.second);
-	std::vector<CPiece>::iterator it = BoardData[oldClick.first].emplace(BoardData[oldClick.first].begin() + oldClick.second);
-	//BoardData[oldClick.first].emplace
-	int r = 5;
+	if (PieceAt(click).GetSprite()->getColor() == sf::Color(255, 255, 255)) // piece starts coloured white
+	{
+		// colours set to "selected" colours (also sets "selected" colours of destinations)
+		BoardData[click.first][click.second].GetSprite()->setColor(sf::Color(255, 255, 0));
+		for (unsigned int dest = 0; dest < PieceAt(click).GetDestinations().size(); dest++)
+		{
+			int DestFile = PieceAt(click).GetDestinations()[dest].first;
+			int DestRank = PieceAt(click).GetDestinations()[dest].second;
+			PieceAt(std::make_pair(DestFile, DestRank)).GetSprite()->setColor(sf::Color(255, 0, 255));
+		}
+	}
+	else // pieces start coloured as selected
+	{
+		// colours set to white (also sets destination colours to white)
+		PieceAt(click).GetSprite()->setColor(sf::Color(255, 255, 255));
+		for (unsigned int dest = 0; dest < PieceAt(click).GetDestinations().size(); dest++)
+		{
+			int DestFile = PieceAt(click).GetDestinations()[dest].first;
+			int DestRank = PieceAt(click).GetDestinations()[dest].second;
+			PieceAt(std::make_pair(DestFile, DestRank)).GetSprite()->setColor(sf::Color(255, 255, 255));
+		}
+	}
+	return;
+}
+*/
+
+// MUST MOVE DESTINATION HIGHLIGHT FUNCTIONS TO PIECE.CPP
+void CGame::DestinationHighlightOn(std::pair<int, int> click)
+{
+	for (unsigned int dest = 0; dest < PieceAt(click)->GetDestinations().size(); dest++)
+	{
+		PieceAt(std::make_pair(PieceAt(click)->GetDestinations()[dest].first, PieceAt(click)->GetDestinations()[dest].second))->highlightOn();
+	}
+	return;
+}
+
+// MUST MOVE DESTINATION HIGHLIGHT FUNCTIONS TO PIECE.CPP
+void CGame::DestinationHighlightOff(std::pair<int, int> click)
+{
+	for (unsigned int dest = 0; dest < PieceAt(click)->GetDestinations().size(); dest++)
+	{
+		PieceAt(std::make_pair(PieceAt(click)->GetDestinations()[dest].first, PieceAt(click)->GetDestinations()[dest].second))->highlightOff();
+	}
+	return;
+}
+
+// MUST MOVE DESTINATION HIGHLIGHT FUNCTIONS TO PIECE.CPP
+void CGame::DestinationHighlightToggle(std::pair<int, int> click)
+{
+	if (PieceAt(click)->GetSprite()->getColor() == sf::Color(255, 255, 255)) { DestinationHighlightOn(click); }
+	else { DestinationHighlightOff(click); }
+	return;
+}
+
+
+// places a copy of the original piece in the new location, and destroys the original piece.
+void CGame::MoveFromTo(std::pair<int, int> olddClick, std::pair<int, int> newClick)
+{
+	//PieceAt(newClick) = PieceAt(oldClick);
+	//BoardData[newClick.first][newClick.second].SetSprite(BoardData[oldClick.first][oldClick.second].GetSprite());
+	//BoardData[newClick.first][newClick.second].SetSprite(BoardData[0][3].GetSprite());
+	//BoardData[olddClick.first].erase(BoardData[olddClick.first].begin() + olddClick.second);
+
+	//BoardData[olddClick.first].emplace(BoardData[olddClick.first].begin() + olddClick.second);
+
+	return;
+}
+
+//VALIDATED
+void CGame::DestListToggle(std::pair<int, int> click)
+{
+	if (DestList == std::vector<std::pair<int, int>> {}) // if CGame's list of destinations is empty
+	{
+		// then populate it with destinations for the click provided
+		PieceAt(click)->calcDestinations(); //perhaps not necessary, but doesn't hurt...
+		DestList = PieceAt(click)->GetDestinations(); // destinations should have already been calculated for click
+	}
+	else // CGame's list of destinations already has some destinations in it
+	{
+		DestList = std::vector<std::pair<int, int>> {};
+	}
 	return;
 }
 
