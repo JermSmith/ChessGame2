@@ -16,6 +16,7 @@ public:
 
 	void Reset();
 
+	sf::Sprite* GetBoardDataSprite(int, int);
 	CPiece* GetBoardData(int, int);
 
 	sf::Sprite* GetBoardTileSpr();
@@ -26,6 +27,7 @@ private:
 
 	std::vector<std::vector<CPiece>> BoardData;
 	CPiece* ptrBoardData;
+	sf::Sprite* ptrBoardDataSpr;
 
 	sf::Texture BoardTexture;
 
@@ -34,14 +36,20 @@ private:
 
 	sf::Texture PiecesTexture;
 
+	CPiece* PieceAt(std::pair<int, int>);
+
 	// used for LeftClick function
 	EColour currentTeam = EColour::white;
 	std::pair<int, int> oldClick = std::make_pair(0, 0);
 	bool bClickOffBoard(std::pair<int, int>);
 	std::vector<std::pair<int, int>> DestList = {};
 	bool bIsDestination(std::pair<int, int>);
-	void HighlightOff(std::pair<int, int>);
-	void HighlightOn(std::pair<int, int>);
+	
+	void DestinationHighlightOn(std::pair<int, int>);
+	void DestinationHighlightOff(std::pair<int, int>);
+	void DestinationHighlightMatch(std::pair<int, int>);
+
 	void MoveFromTo(std::pair<int, int>, std::pair<int, int>);
+	void DestListToggle(std::pair<int, int>);
 	void switchTeam();
 };

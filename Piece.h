@@ -67,16 +67,24 @@ public:
 	sf::Sprite* GetSprite(); // returns a pointer to an object of type sf::Sprite
 	std::vector<std::pair<int, int>> GetDestinations();
 	void calcDestinations();
+	void clearDestinations();
 
 	void SetColour(EColour);
 	void SetPieceType(EPiece);
 	void SetRangeType(ERange);
 	void SetPosition(std::pair<int, int>);
+	void SetSprite(sf::Sprite *);
+
+	void highlightOff();
+	void highlightOnP();
+	void highlightOnY();
+	void highlightToggle();
 
 	//bool IsValidDestination(int, int);
 	void Move(std::vector<int>);
 
-	//void highlightOff();
+	sf::Sprite Sprite; // actual Sprite
+
 
 private:
 	EColour Colour;
@@ -87,7 +95,7 @@ private:
 
 	sf::Texture Texture;
 	sf::IntRect TextureRect;
-	sf::Sprite Sprite; // actual Sprite
+	//sf::Sprite Sprite; // actual Sprite
 	sf::Sprite* ptrSprite; // points to Sprite
 
 };

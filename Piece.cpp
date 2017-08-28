@@ -44,11 +44,12 @@ void CPiece::SetSprite(sf::Sprite *GivenSprite)
 }
 
 void CPiece::highlightOff() { Sprite.setColor(sf::Color(255, 255, 255)); return; } //VALIDATED
-void CPiece::highlightOn() { Sprite.setColor(sf::Color(255, 0, 255)); return; } //VALIDATED
+void CPiece::highlightOnP() { Sprite.setColor(sf::Color(255, 0, 255)); return; } //VALIDATED
+void CPiece::highlightOnY() { Sprite.setColor(sf::Color(255, 255, 0)); return; } //VALIDATED
 
 void CPiece::highlightToggle()
 {
-	if (Sprite.getColor() == sf::Color(255, 255, 255)) { highlightOn(); }
+	if (Sprite.getColor() == sf::Color(255, 255, 255)) { highlightOnP(); }
 	else { highlightOff(); }
 	return;
 }
