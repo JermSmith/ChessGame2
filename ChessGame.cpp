@@ -156,11 +156,8 @@ void CGame::LeftClick(sf::Event event)
 	{
 		PieceAt(newClick)->calcDestinations();
 		DestList = PieceAt(newClick)->GetDestinations();
-
-		//PieceAndDestHighlightOn(newClick);
-			PieceAt(newClick)->highlightOnP();
-			//DestinationHighlightMatch(newClick);
-			DestinationHighlightOn(newClick);
+		
+		PieceAndDestHighlightOn(newClick);
 	}
 
 	//VALIDATED
@@ -168,11 +165,8 @@ void CGame::LeftClick(sf::Event event)
 	else if ((PieceAt(oldClick)->GetColour() == currentTeam) && (PieceAt(newClick)->GetColour() != currentTeam))
 	{
 		DestList = {};
-
-		//PieceAndDestHighlightOff(oldClick);
-			PieceAt(oldClick)->highlightOff();
-			//DestinationHighlightMatch(oldClick);
-			DestinationHighlightOff(oldClick);
+		
+		PieceAndDestHighlightOff(oldClick);
 	}
 
 	//VALIDATED
@@ -183,11 +177,9 @@ void CGame::LeftClick(sf::Event event)
 		//VALIDATED
 		if (oldClick == newClick) //clicked on same piece twice in a row
 		{
-			DestListToggle(newClick); //updates DestList. Kind of want this line to be "DestList = DestListToggle(newClick);" ...
+			DestListToggle(newClick); //updates DestList
 
-			//PieceAndDestHighlightToggle(newClick);
-				PieceAt(newClick)->highlightToggle();
-				DestinationHighlightMatch(newClick); //matches highlight states of destinations to newClick, after its highlight is toggled
+			PieceAndDestHighlightToggle(newClick);
 		}
 
 		//VALIDATED
@@ -197,12 +189,9 @@ void CGame::LeftClick(sf::Event event)
 			// overwrite CGame's list of destinations with that of the most recent click
 			DestList = BoardData[newClick.first][newClick.second].GetDestinations();
 
-			//PieceAndDestHighlightOff(oldClick);
-				PieceAt(oldClick)->highlightOff();
+			PieceAndDestHighlightOff(oldClick);
 
-			//PieceAndDestHighlightOn(newClick);
-				PieceAt(newClick)->highlightOnP();
-				DestinationHighlightMatch(newClick);
+			PieceAndDestHighlightOn(newClick);
 		}
 
 	}
@@ -250,8 +239,10 @@ bool CGame::bIsDestination(std::pair<int, int> click)
 }
 
 // loops through all destinations of piece at location "click" and highlights them
-void CGame::DestinationHighlightOn(std::pair<int, int> click)
+void CGame::PieceAndDestHighlightOn(std::pair<int, int> click)
 {
+	PieceAt(click)->highlightOnP();
+
 	for (unsigned int dest = 0; dest < PieceAt(click)->GetDestinations().size(); dest++)
 	{
 		PieceAt(std::make_pair(PieceAt(click)->GetDestinations()[dest].first, PieceAt(click)->GetDestinations()[dest].second))->highlightOnY();
@@ -260,8 +251,10 @@ void CGame::DestinationHighlightOn(std::pair<int, int> click)
 }
 
 // loops through all destinations of piece at location "click" and turns off highlight
-void CGame::DestinationHighlightOff(std::pair<int, int> click)
+void CGame::PieceAndDestHighlightOff(std::pair<int, int> click)
 {
+	PieceAt(click)->highlightOff();
+
 	for (unsigned int dest = 0; dest < PieceAt(click)->GetDestinations().size(); dest++)
 	{
 		PieceAt(std::make_pair(PieceAt(click)->GetDestinations()[dest].first, PieceAt(click)->GetDestinations()[dest].second))->highlightOff();
@@ -270,10 +263,26 @@ void CGame::DestinationHighlightOff(std::pair<int, int> click)
 }
 
 // matches destination highlight states to that of clicked piece at instant function is called
-void CGame::DestinationHighlightMatch(std::pair<int, int> click)
+void CGame::PieceAndDestHighlightToggle(std::pair<int, int> click)
 {
-	if (PieceAt(click)->GetSprite()->getColor() == sf::Color(255, 255, 255)) { DestinationHighlightOff(click); }
-	else { DestinationHighlightOn(click); }
+	PieceAt(click)->highlightToggle(); //new highlight state of clicked piece impacts the following if/else
+
+	if (PieceAt(click)->GetSprite()->getColor() == sf::Color(255, 255, 255)) //clicked square is now white, so destinations should be white too
+	{
+		// dest highlight off
+		for (unsigned int dest = 0; dest < PieceAt(click)->GetDestinations().size(); dest++)
+		{
+			PieceAt(std::make_pair(PieceAt(click)->GetDestinations()[dest].first, PieceAt(click)->GetDestinations()[dest].second))->highlightOff();
+		}
+	}
+	else //clicked square is now highlighted, so destinations should be highlighted too
+	{
+		//dest highlight on
+		for (unsigned int dest = 0; dest < PieceAt(click)->GetDestinations().size(); dest++)
+		{
+			PieceAt(std::make_pair(PieceAt(click)->GetDestinations()[dest].first, PieceAt(click)->GetDestinations()[dest].second))->highlightOnY();
+		}
+	}
 	return;
 }
 

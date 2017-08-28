@@ -45,9 +45,12 @@ private:
 	std::vector<std::pair<int, int>> DestList = {};
 	bool bIsDestination(std::pair<int, int>);
 	
+	void PieceAndDestHighlightOn(std::pair<int, int>);
+	void PieceAndDestHighlightOff(std::pair<int, int>);
+	void PieceAndDestHighlightToggle(std::pair<int, int>);
+
 	void DestinationHighlightOn(std::pair<int, int>);
 	void DestinationHighlightOff(std::pair<int, int>);
-	void DestinationHighlightMatch(std::pair<int, int>);
 
 	void MoveFromTo(std::pair<int, int>, std::pair<int, int>);
 	void DestListToggle(std::pair<int, int>);

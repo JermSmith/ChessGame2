@@ -66,8 +66,7 @@ public:
 	std::pair<int, int> GetPosition();
 	sf::Sprite* GetSprite(); // returns a pointer to an object of type sf::Sprite
 	std::vector<std::pair<int, int>> GetDestinations();
-	void calcDestinations();
-	void clearDestinations();
+	virtual void calcDestinations();
 
 	void SetColour(EColour);
 	void SetPieceType(EPiece);

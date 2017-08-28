@@ -105,13 +105,22 @@ private:
 
 ///////
 
+
+
 class CPawn : public CPiece
 {
 public:
 	CPawn(); // constructor
 
-	std::vector<std::pair<int, int>> GetValidDestinations();
+	//std::vector<std::pair<int, int>> calcDestinations();
+	
+	void calcDestinations()
+	{
+		Destinations = { std::make_pair(7,5), std::make_pair(7,3), std::make_pair(7,1) };
+	}
 
+
+	
 	bool CPawn::IsValidMove(std::vector<int>)
 	{
 		return false;
@@ -121,7 +130,9 @@ public:
 	{
 		return;
 	}
+	
 
 private:
 
+	std::vector<std::pair<int, int>> Destinations;
 };

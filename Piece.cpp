@@ -19,18 +19,18 @@ sf::Sprite* CPiece::GetSprite() { ptrSprite = &Sprite; return ptrSprite; } // se
 //returns a vector of pairs of all valid destinations
 std::vector<std::pair<int, int>> CPiece::GetDestinations() { return Destinations;  }
 
+
+
+
 //VALIDATED AS SETTING (6,6) and (6,1)
-//=calculates destinations for the selected piece, and stores them in a vector of pairs, in the private property Destinations
+//calculates destinations for the selected piece, and stores them in a vector of pairs, in the private property Destinations
 void CPiece::calcDestinations()
 {
 	Destinations = { std::make_pair(6,6), std::make_pair(6,1) };
 	return;
 }
 
-void CPiece::clearDestinations()
-{
-	Destinations = {}; return;
-}
+
 
 void CPiece::SetColour(EColour GivenColour) { Colour = GivenColour; return; }
 void CPiece::SetPieceType(EPiece GivenPieceType) { PieceType = GivenPieceType; return; }
@@ -43,9 +43,9 @@ void CPiece::SetSprite(sf::Sprite *GivenSprite)
 	return;
 }
 
-void CPiece::highlightOff() { Sprite.setColor(sf::Color(255, 255, 255)); return; } //VALIDATED
-void CPiece::highlightOnP() { Sprite.setColor(sf::Color(255, 0, 255)); return; } //VALIDATED
-void CPiece::highlightOnY() { Sprite.setColor(sf::Color(255, 255, 0)); return; } //VALIDATED
+void CPiece::highlightOff() { Sprite.setColor(sf::Color(255, 255, 255)); return; } //applies to individual piece//VALIDATED
+void CPiece::highlightOnP() { Sprite.setColor(sf::Color(255, 0, 255)); return; } //applies to individual piece//VALIDATED
+void CPiece::highlightOnY() { Sprite.setColor(sf::Color(255, 255, 0)); return; } //applies to individual piece//VALIDATED
 
 void CPiece::highlightToggle()
 {

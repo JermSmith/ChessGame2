@@ -51,10 +51,30 @@ CPawn::CPawn()
 {
 	SetPieceType(EPiece::pawn);
 	SetRangeType(ERange::fixed);
+
+	/*
+	void calcDestinations()
+	{
+		Destinations = { std::make_pair(6,6), std::make_pair(6,1) };
+	}
+	*/
+
 }
 
 
-std::vector<std::pair<int, int>> CPawn::GetValidDestinations()
+/*
+class CPawn : public CPiece
 {
-	return{ std::make_pair(4,4), std::make_pair(5,5) };
-}
+public:
+
+	void calcDestinations()
+	{
+		Destinations = { std::make_pair(7,5), std::make_pair(7,3), std::make_pair(7,1) };
+	}
+
+private:
+
+	std::vector<std::pair<int, int>> Destinations;
+};
+*/
+
