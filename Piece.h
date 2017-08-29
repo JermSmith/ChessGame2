@@ -65,8 +65,8 @@ public:
 	ERange GetRangeType();
 	std::pair<int, int> GetPosition();
 	sf::Sprite* GetSprite(); // returns a pointer to an object of type sf::Sprite
-	std::vector<std::pair<int, int>> GetDestinations();
 	virtual void calcDestinations();
+	virtual std::vector<std::pair<int, int>> GetDestinations();
 
 	void SetColour(EColour);
 	void SetPieceType(EPiece);
@@ -82,19 +82,21 @@ public:
 	//bool IsValidDestination(int, int);
 	void Move(std::vector<int>);
 
-	sf::Sprite Sprite; // actual Sprite
+	sf::Sprite Sprite; // actual Sprite -- possibly to move to PRIVATE
 
 
-private:
+protected:
+	std::vector<std::pair<int, int>> Destinations;
+	
 	EColour Colour;
 	EPiece PieceType;
 	ERange RangeType;
 	std::pair<int, int> Position;
-	std::vector<std::pair<int, int>> Destinations;
 
+
+private:
 	sf::Texture Texture;
 	sf::IntRect TextureRect;
-	//sf::Sprite Sprite; // actual Sprite
 	sf::Sprite* ptrSprite; // points to Sprite
-
+	
 };

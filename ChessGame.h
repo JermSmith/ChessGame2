@@ -1,6 +1,5 @@
 #pragma once
 #include "Piece.h"
-#include "PieceDefinitions.h"
 
 template<typename EEnumClass>
 int to_int(EEnumClass name)
@@ -22,7 +21,7 @@ public:
 	sf::Sprite* GetBoardTileSpr();
 
 	void LeftClick(sf::Event);
-	
+
 private:
 
 	std::vector<std::vector<CPiece>> BoardData;

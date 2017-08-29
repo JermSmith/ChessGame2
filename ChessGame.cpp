@@ -1,5 +1,11 @@
 #pragma once
 #include "ChessGame.h"
+#include "Pawn.h"
+#include "Rook.h"
+#include "Knight.h"
+#include "Bishop.h"
+#include "Queen.h"
+#include "King.h"
 
 CGame::CGame() { Reset(); return; }
 
@@ -34,7 +40,7 @@ void CGame::Reset()
 	BoardData[to_int(EFile::FileF)][to_int(ERank::Rank2)] = Pawn6W;		// F2, white pawn
 	BoardData[to_int(EFile::FileG)][to_int(ERank::Rank2)] = Pawn7W;		// G2, white pawn
 	BoardData[to_int(EFile::FileH)][to_int(ERank::Rank2)] = Pawn8W;		// H2, white pawn
-
+	
 	BoardData[to_int(EFile::FileA)][to_int(ERank::Rank8)] = Rook1B;		// A8, black rook
 	BoardData[to_int(EFile::FileB)][to_int(ERank::Rank8)] = Knight1B;	// B8, black knight
 	BoardData[to_int(EFile::FileC)][to_int(ERank::Rank8)] = Bishop1B;	// C8, black bishop
@@ -60,6 +66,7 @@ void CGame::Reset()
 			BoardData[file][rank].SetColour(EColour::white);
 		}
 	}
+	
 	// A3 through H6
 	for (int file = to_int(EFile::FileA); file <= to_int(EFile::FileH); file += 1)
 	{
@@ -69,6 +76,7 @@ void CGame::Reset()
 			BoardData[file][rank].SetPieceType(EPiece::empty);	// A3 thru H6, empty
 		}
 	}
+	
 	// A7 through H8
 	for (int file = to_int(EFile::FileA); file <= to_int(EFile::FileH); file += 1)
 	{
@@ -88,6 +96,7 @@ void CGame::Reset()
 
 	// --------------------// Texture for pieces
 	PiecesTexture.loadFromFile("pieces_tiled.png");
+	
 	// set the 
 	for (int file = to_int(EFile::FileA); file <= to_int(EFile::FileH); file++)
 	{
@@ -102,11 +111,18 @@ void CGame::Reset()
 		}
 	}
 	// --------------------//
+	
 
 	return;
 }
 
-sf::Sprite *CGame::GetBoardDataSprite(int file, int rank)
+sf::Sprite* CGame::GetBoardTileSpr()
+{
+	ptrBoardTileSpr = &BoardTileSpr;
+	return ptrBoardTileSpr;
+}
+
+sf::Sprite* CGame::GetBoardDataSprite(int file, int rank)
 {
 	ptrBoardDataSpr = BoardData[file][rank].GetSprite();
 	return ptrBoardDataSpr;
@@ -118,11 +134,7 @@ CPiece* CGame::GetBoardData(int file, int rank)
 	return ptrBoardData;
 }
 
-sf::Sprite* CGame::GetBoardTileSpr()
-{	
-	ptrBoardTileSpr = &BoardTileSpr;
-	return ptrBoardTileSpr; 
-}
+
 
 void CGame::LeftClick(sf::Event event)
 {
