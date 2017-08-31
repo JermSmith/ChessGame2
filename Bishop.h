@@ -4,7 +4,7 @@
 class CBishop : public CPiece
 {
 public:
-	CBishop(); // constructor
+	CBishop(EColour); // constructor
 
 	virtual void calcDestinations();
 	virtual std::vector<std::pair<int, int>> GetDestinations();
@@ -13,6 +13,5 @@ public:
 	void CBishop::Move(std::vector<int>);
 
 private:
-	std::vector<std::pair<int, int>> Destinations;
 
 };

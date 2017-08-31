@@ -4,15 +4,14 @@
 class CPawn : public CPiece
 {
 public:
-	CPawn(); // constructor
+	CPawn(EColour); // constructor
 
-	virtual void calcDestinations();
-	virtual std::vector<std::pair<int, int>> GetDestinations();
+	void calcDestinations();
+	std::vector<std::pair<int, int>> GetDestinations();
 
 	bool CPawn::IsValidMove(std::vector<int>);
 	void CPawn::Move(std::vector<int>);
 
 private:
-	std::vector<std::pair<int, int>> Destinations;
 
 };

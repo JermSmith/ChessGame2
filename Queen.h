@@ -4,7 +4,7 @@
 class CQueen : public CPiece
 {
 public:
-	CQueen(); // constructor
+	CQueen(EColour); // constructor
 
 	virtual void calcDestinations();
 	virtual std::vector<std::pair<int, int>> GetDestinations();
@@ -13,6 +13,5 @@ public:
 	void CQueen::Move(std::vector<int>);
 
 private:
-	std::vector<std::pair<int, int>> Destinations;
 
 };

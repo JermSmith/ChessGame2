@@ -4,7 +4,7 @@
 class CKing : public CPiece
 {
 public:
-	CKing(); // constructor
+	CKing(EColour); // constructor
 
 	virtual void calcDestinations();
 	virtual std::vector<std::pair<int, int>> GetDestinations();
@@ -13,6 +13,5 @@ public:
 	void CKing::Move(std::vector<int>);
 
 private:
-	std::vector<std::pair<int, int>> Destinations;
 
 };

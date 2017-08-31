@@ -4,7 +4,7 @@
 class CRook : public CPiece
 {
 public:
-	CRook(); // constructor
+	CRook(EColour); // constructor
 
 	virtual void calcDestinations();
 	virtual std::vector<std::pair<int, int>> GetDestinations();
@@ -13,6 +13,5 @@ public:
 	void CRook::Move(std::vector<int>);
 
 private:
-	std::vector<std::pair<int, int>> Destinations;
 
 };

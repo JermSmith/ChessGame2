@@ -1,5 +1,6 @@
 #pragma once
 #include "ChessGame.h"
+#include "BoardData.h"
 
 void PlayGame();
 
@@ -15,7 +16,6 @@ int main()
 void PlayGame()
 {
 	sf::RenderWindow window(sf::VideoMode(PIX_MPL * 11, PIX_MPL * 8), "Chess Game");
-	//sf::View defaultView(window.getDefaultView());
 
 	while (window.isOpen())
 	{
@@ -47,25 +47,20 @@ void PlayGame()
 			}
 
 			window.clear();
-			window.draw(*Game.GetBoardTileSpr()); //draw checkered background
 
 			// loop through and draw all spaces on board
 			for (int file = to_int(EFile::FileA); file <= to_int(EFile::FileH); file++)
 			{
 				for (int rank = to_int(ERank::Rank1); rank <= to_int(ERank::Rank8); rank++)
 				{
-					window.draw(*Game.GetBoardDataSprite(file, rank)); // draw the Sprite pointed at by GetSprite();
-					//window.draw(Game.GetBoardData(file, rank)->Sprite);
+					window.draw(*Game.PassAlongBoardSprite(file, rank)); // draw the background associated with that (file, rank)
+					window.draw(*Game.PassAlongPieceSprite(file, rank)); // draw the piece sprite associated with that (file, rank)
 				}
 			}
 
 			window.display();
 		}
 	}
-	// LOOP:
-	//	receive player click (must be for valid team) - highlight piece
-	//	determine valid destinations - highlight these squares
-	//	receive player click
-	//	either restart the loop, or place piece in new location
+
 	return;
 }

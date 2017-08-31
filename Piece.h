@@ -2,6 +2,13 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
+template<typename EEnumClass>
+int to_int(EEnumClass name)
+{
+	return static_cast<int>(name);
+}
+constexpr int PIX_MPL = 64;
+
 /* enum classes:
 ERank (rank 1=0, rank 8=7)
 EFile (file A=0, file H=7)
@@ -59,44 +66,32 @@ class CPiece
 {
 public:
 	CPiece(); // constructor
+	CPiece(EColour);
 
 	EColour GetColour();
 	EPiece GetPieceType();
 	ERange GetRangeType();
 	std::pair<int, int> GetPosition();
-	sf::Sprite* GetSprite(); // returns a pointer to an object of type sf::Sprite
-	virtual void calcDestinations();
-	virtual std::vector<std::pair<int, int>> GetDestinations();
 
 	void SetColour(EColour);
 	void SetPieceType(EPiece);
 	void SetRangeType(ERange);
-	void SetPosition(std::pair<int, int>);
-	void SetSprite(sf::Sprite *);
+	void SetPosition(int, int);
+	void SetDestinations(std::vector<std::pair<int, int>>);
 
-	void highlightOff();
-	void highlightOnP();
-	void highlightOnY();
-	void highlightToggle();
-
-	//bool IsValidDestination(int, int);
-	void Move(std::vector<int>);
-
-	sf::Sprite Sprite; // actual Sprite -- possibly to move to PRIVATE
-
+	void ToggleDestinations();
+	virtual void calcDestinations();
+	virtual std::vector<std::pair<int, int>> GetDestinations();
 
 protected:
 	std::vector<std::pair<int, int>> Destinations;
-	
+		
 	EColour Colour;
 	EPiece PieceType;
 	ERange RangeType;
 	std::pair<int, int> Position;
 
-
 private:
-	sf::Texture Texture;
-	sf::IntRect TextureRect;
-	sf::Sprite* ptrSprite; // points to Sprite
-	
+
+
 };
