@@ -1,5 +1,6 @@
 #pragma once
 #include "ChessGame.h"
+
 #include "BoardData.h"
 #include "Pawn.h"
 #include "Rook.h"
@@ -78,7 +79,7 @@ void CGame::LeftClick(sf::Event event)
 		oldPiece = &tempObj;
 		break;
 	}
-	default:
+	default: // accounts for empty
 		CPiece tempObj;
 		oldPiece = &tempObj;
 		break;
@@ -135,12 +136,14 @@ void CGame::LeftClick(sf::Event event)
 	oldPiece->calcDestinations();
 	newPiece->calcDestinations();
 
-	// NOT YET TROUBLESHOOTED
 	if (bIsDestination(newPiece->GetPosition())) // clicked on a valid destination
 	{
 		board.highlightOff(oldPiece->GetPosition(), oldPiece->GetDestinations());
 
+		board.movePiece(oldPiece->GetPosition(), newPiece->GetPosition());
+
 		DestList = {};
+
 		switchTeam();
 	}
 
@@ -174,7 +177,7 @@ void CGame::LeftClick(sf::Event event)
 				DestList = std::vector<std::pair<int, int>> {};
 			}
 
-			board.highlightToggle(newPiece->GetPosition(), newPiece->GetDestinations());
+			board.highlightToggle(oldPiece->GetPosition(), oldPiece->GetDestinations());
 		}
 
 		else // must have clicked a new piece of our team's colour
@@ -228,3 +231,4 @@ void CGame::switchTeam()
 	else { currentTeam = EColour::white; }
 	return;
 }
+

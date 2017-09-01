@@ -9,7 +9,25 @@ CPawn::CPawn(EColour colour)
 
 void CPawn::calcDestinations()
 {
-	Destinations = { std::make_pair(0,2), std::make_pair(1,2), std::make_pair(2,2), std::make_pair(3,2) };
+	switch (Colour)
+	{
+	case EColour::empty:
+	{
+		Destinations = {};
+		break;
+	}
+	case EColour::white:
+	{
+		Destinations = { std::make_pair(Position.first, Position.second + 1) };
+		break;
+	}
+	case EColour::black:
+	{
+		Destinations = { std::make_pair(Position.first, Position.second - 1) };
+		break;
+	}
+	}
+	//Destinations = { std::make_pair(Position.first, Position.second + to_int(Colour) * -2 + 1)}; // maps 0->1, -1->-1
 	return;
 }
 

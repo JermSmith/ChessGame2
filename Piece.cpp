@@ -21,11 +21,7 @@ EPiece CPiece::GetPieceType() { return PieceType; }
 ERange CPiece::GetRangeType() { return RangeType; }
 std::pair<int, int> CPiece::GetPosition() { return Position; }
 
-void CPiece::calcDestinations()
-{
-	//Destinations = { std::make_pair(6,1), std::make_pair(6,6) };
-	return;
-}
+void CPiece::calcDestinations() { return; }
 
 //returns a vector of pairs of all valid destinations
 std::vector<std::pair<int, int>> CPiece::GetDestinations() { return Destinations; }

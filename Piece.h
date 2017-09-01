@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <SFML/Graphics.hpp>
+//#include "BoardData.h"
 
 template<typename EEnumClass>
 int to_int(EEnumClass name)
