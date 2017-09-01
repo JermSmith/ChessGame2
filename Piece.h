@@ -1,8 +1,11 @@
 #pragma once
+/*
 #include <iostream>
 #include <SFML/Graphics.hpp>
-//#include "BoardData.h"
+*/
+#include "BoardData.h"
 
+/*
 template<typename EEnumClass>
 int to_int(EEnumClass name)
 {
@@ -10,13 +13,13 @@ int to_int(EEnumClass name)
 }
 constexpr int PIX_MPL = 64;
 
-/* enum classes:
-ERank (rank 1=0, rank 8=7)
-EFile (file A=0, file H=7)
-EColour (team)
-EPiece (rook, knight, etc.)
-ERangeType (varies or fixed)
-*/
+//enum classes:
+//ERank (rank 1=0, rank 8=7)
+//EFile (file A=0, file H=7)
+//EColour (team)
+//EPiece (rook, knight, etc.)
+//ERangeType (varies or fixed)
+
 
 enum class ERank : int
 {
@@ -62,6 +65,7 @@ enum class ERange : int
 	fixed = 1,
 	empty = 9,
 };
+*/
 
 class CPiece
 {
@@ -80,8 +84,7 @@ public:
 	void SetPosition(int, int);
 	void SetDestinations(std::vector<std::pair<int, int>>);
 
-	void ToggleDestinations();
-	virtual void calcDestinations();
+	virtual void calcDestinations(CBoard*);
 	virtual std::vector<std::pair<int, int>> GetDestinations();
 
 protected:

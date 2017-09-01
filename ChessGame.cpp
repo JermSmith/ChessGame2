@@ -133,8 +133,8 @@ void CGame::LeftClick(sf::Event event)
 	oldPiece->SetPosition(oldClick.first, oldClick.second);
 	newPiece->SetPosition(newClick.first, newClick.second);
 
-	oldPiece->calcDestinations();
-	newPiece->calcDestinations();
+	oldPiece->calcDestinations(&board);
+	newPiece->calcDestinations(&board);
 
 	if (bIsDestination(newPiece->GetPosition())) // clicked on a valid destination
 	{

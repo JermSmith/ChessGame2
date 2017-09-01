@@ -21,7 +21,7 @@ EPiece CPiece::GetPieceType() { return PieceType; }
 ERange CPiece::GetRangeType() { return RangeType; }
 std::pair<int, int> CPiece::GetPosition() { return Position; }
 
-void CPiece::calcDestinations() { return; }
+void CPiece::calcDestinations(CBoard* board) { return; }
 
 //returns a vector of pairs of all valid destinations
 std::vector<std::pair<int, int>> CPiece::GetDestinations() { return Destinations; }
@@ -32,10 +32,5 @@ void CPiece::SetRangeType(ERange GivenRangeType) { RangeType = GivenRangeType; r
 void CPiece::SetPosition(int file, int rank) { Position = std::make_pair(file, rank); return; }
 void CPiece::SetDestinations(std::vector<std::pair<int, int>> destlist) { Destinations = destlist; return; }
 
-void CPiece::ToggleDestinations()
-{
-	if (Destinations != std::vector<std::pair<int, int>> {}) { Destinations = {}; }
-	else { calcDestinations(); }
-	return;
-}
+
 
