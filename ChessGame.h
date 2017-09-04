@@ -28,7 +28,14 @@ private:
 
 	bool bIsDestination(std::pair<int, int>);
 
+	std::pair<int, int> Kpos; // position of king, used immediately after calculation, specifically for checking pins
+	std::pair<int, int> Kdir; // direction away from king to the piece in question which may be pinned
+	bool bCheckForPin(std::pair<int, int>);
+	std::vector<std::pair<int, int>> getPinDestList();
+
 	void switchTeam();
+
+	void checkPawnPromotion();
 
 
 };

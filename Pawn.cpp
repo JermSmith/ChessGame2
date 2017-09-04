@@ -19,7 +19,7 @@ void CPawn::calcDestinations(CBoard* board)
 	{
 		if (board->getPieceType(Position.first, Position.second + one) == EPiece::empty) // square directly in front is empty
 		{
-			Destinations = { std::make_pair(Position.first, Position.second + one) }; // add that square to destinations
+			Destinations.push_back(std::make_pair(Position.first, Position.second + one)); // add that square to destinations
 			switch (Colour) // this switch is to check for 2-space advance on first move
 			{
 			case EColour::white: //starting rank is 2 for white

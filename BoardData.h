@@ -73,7 +73,7 @@ public:
 
 	void setTeamColour(int, int, EColour);
 	void setPieceType(int, int, EPiece);
-	void setPieceSprite(int, int, sf::Sprite);
+	void resetPieceSprite(int, int);
 	void setBoardSprite(int, int, sf::Sprite);
 	
 	EColour getTeamColour(int, int);
@@ -88,6 +88,8 @@ public:
 	void movePiece(std::pair<int, int>, std::pair<int, int>);
 
 private:
+	void ResetBoard();
+	
 	std::vector < std::vector < std::tuple < EColour, EPiece, sf::Sprite, sf::Sprite > > > BoardData;
 
 	sf::Texture BoardTexture;
