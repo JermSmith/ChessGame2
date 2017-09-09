@@ -152,8 +152,43 @@ void CGame::LeftClick(sf::Event event)
 	// first click was NOT ON our team, second click was ON our team
 	else if ((oldPiece->GetColour() != currentTeam) && (newPiece->GetColour() == currentTeam))
 	{
-		if (bCheckForPin(newPiece->GetPosition())) { DestList = {std::make_pair(0,0)}; }
-		else { DestList = newPiece->GetDestinations(); }
+		/*
+		bool bIsCheck = false;
+		std::vector<std::pair<int, int>> BlockCheckSpots = {};
+		std::vector<std::pair<int, int>> PreCheckDestList = {};
+		...
+		bIsCheck = bCheckIfCheck(kingLocation);
+		if (bIsCheck == true)
+		{
+			BlockCheckSpots = GetBlockCheckSpots(kingLocation);
+			--^^[[if AttackingSpots.size() > 1: king must move, BlockCheckSpots = {} (since more than one check)... if .size() == 1 && attacking pieceType == knight: BlockCheckSpots = {location of knight}... else: BlockCheckSpots = {populated vector}...]]
+			
+			PreCheckDestList = GetDestListCheckingForPin(newPiece);
+			for (unsigned int i_ = 0; i_ < PreCheckDestList.size(); i_++)
+			{
+				for (unsigned int j_ == 0; j_ < BlockCheckSpots.size(); j_++)
+				{
+					if (PreCheckDestList[i_] == BlockCheckSpots[j_])
+					{
+						DestList.push_back(BlockCheckSpots[j_]);
+					}
+				}
+			}
+		}
+		else
+		{
+			do regular things that would otherwise happen;
+		}
+		
+		////
+		ALSO, TO GO AT BOTTOM OF LEFT CLICK FUNCTION:
+		BlockCheckSpots = GetBlockCheckSpots();
+		CheckForCheckmate(kingLocation, BlockCheckSpots);
+		--^^[[if king has no valid destinations && for each piece_, GetDestListCheckingForPiece(piece_)[i_] != BlockCheckSpots[j_], then checkmate.]]
+		*/
+
+		DestList = GetDestListCheckingForPin(newPiece);
+
 		board.highlightOn(newPiece->GetPosition(), DestList);
 	}
 	
@@ -173,8 +208,8 @@ void CGame::LeftClick(sf::Event event)
 			if (DestList == std::vector<std::pair<int, int>> {}) // if CGame's list of destinations is empty...
 			{
 				// then populate it with destinations for the click provided
-				if (bCheckForPin(newPiece->GetPosition())) { DestList = {std::make_pair(0,0)}; }
-				else { DestList = newPiece->GetDestinations(); }
+				DestList = GetDestListCheckingForPin(newPiece);
+
 				board.highlightToggle(newPiece->GetPosition(), DestList);
 			}
 			else // CGame's list of destinations already has some destinations in it
@@ -188,8 +223,7 @@ void CGame::LeftClick(sf::Event event)
 		{
 			board.highlightOff(oldPiece->GetPosition(), DestList);
 
-			if (bCheckForPin(newPiece->GetPosition())) { DestList = {std::make_pair(0,0)}; }
-			else { DestList = newPiece->GetDestinations(); }
+			DestList = GetDestListCheckingForPin(newPiece);
 
 			board.highlightOn(newPiece->GetPosition(), DestList);
 		}
@@ -232,11 +266,14 @@ bool CGame::bIsDestination(std::pair<int, int> click)
 	return IsDestination;
 }
 
-bool CGame::bCheckForPin(std::pair<int, int> position)
+std::vector<std::pair<int, int>> CGame::GetDestListCheckingForPin(CPiece* piece)
 {
 	bool bIsPin = false;
 
-	Kdir = std::make_pair(0, 0); // reset to (0,0) each time bCheckForPin is called
+	// position of king, used immediately after calculation, specifically for checking pins
+	std::pair<int, int> Kpos;
+	// direction away from king to the piece in question which may be pinned -- reset to (0,0) 
+	std::pair<int, int> Kdir = std::make_pair(0,0); 
 
 	std::vector<std::pair<int, int>> dir = { std::make_pair(-1, -1), std::make_pair(-1, 0), \
 		std::make_pair(-1, 1), std::make_pair(0, 1), std::make_pair(1, 1), std::make_pair(1, 0), \
@@ -244,13 +281,15 @@ bool CGame::bCheckForPin(std::pair<int, int> position)
 
 	for (unsigned int i_ = 0; i_ < dir.size(); i_++)
 	{
-		std::pair<int, int> newPos = position; // set newPos to be position of piece in question, before moving along a line
+		// set newPos to be position of piece in question, before moving along a line
+		std::pair<int, int> newPos = piece->GetPosition(); 
 		while ((newPos.first + dir[i_].first) >= 0 && (newPos.first + dir[i_].first <= 7) && \
 			(newPos.second + dir[i_].second >= 0) && (newPos.second + dir[i_].second <= 7))
 		{
 			if (board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == EPiece::king && \
 				board.getTeamColour(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == \
-				board.getTeamColour(position.first, position.second)) // the king of same colour is facing the piece at "position"
+				board.getTeamColour(piece->GetPosition().first, piece->GetPosition().second))
+				// the king of same colour is facing piece in a line
 			{
 				Kpos = std::make_pair(newPos.first + dir[i_].first, newPos.second + dir[i_].second);
 				Kdir = std::make_pair(dir[i_].first * -1, dir[i_].second * -1);
@@ -280,12 +319,13 @@ bool CGame::bCheckForPin(std::pair<int, int> position)
 	}
 	else // the king is facing the piece in question - may be a pin
 	{
-		std::pair<int, int> newPos = position; // set newPos to be position of piece, before moving along line defined by Kdir
+		// set newPos to be position of piece, before moving along line defined by Kdir
+		std::pair<int, int> newPos = piece->GetPosition(); 
 		while ((newPos.first + Kdir.first) >= 0 && (newPos.first + Kdir.first <= 7) && \
 			(newPos.second + Kdir.second >= 0) && (newPos.second + Kdir.second <= 7))
 		{
 			if (board.getTeamColour(newPos.first + Kdir.first, newPos.second + Kdir.second) != \
-				board.getTeamColour(position.first, position.second) && \
+				board.getTeamColour(piece->GetPosition().first, piece->GetPosition().second) && \
 					board.getTeamColour(newPos.first + Kdir.first, newPos.second + Kdir.second) != EColour::empty)
 				// hit a piece of the other team -- now check what type
 			{
@@ -313,7 +353,7 @@ bool CGame::bCheckForPin(std::pair<int, int> position)
 				}
 			}
 			else if (board.getTeamColour(newPos.first + Kdir.first, newPos.second + Kdir.second) == \
-				board.getTeamColour(position.first, position.second)) // hit a piece of same colour, so no pin
+				board.getTeamColour(piece->GetPosition().first, piece->GetPosition().second)) // hit a piece of same colour, so no pin
 			{
 				bIsPin = false;
 				break; // exit the while loop
@@ -324,14 +364,49 @@ bool CGame::bCheckForPin(std::pair<int, int> position)
 			}
 		}
 	}
-	return bIsPin;
-}
-
-std::vector<std::pair<int, int>> CGame::getPinDestList()
-{
+	//return bIsPin;
 	std::vector<std::pair<int, int>> pinDestList = {};
 
+	if (bIsPin)
+	{
+		if ((piece->GetPieceType() == EPiece::bishop && (abs(Kdir.first) + abs(Kdir.second) == 2)) || \
+			(piece->GetPieceType() == EPiece::rook && (abs(Kdir.first) + abs(Kdir.second) == 1)) || \
+			(piece->GetPieceType() == EPiece::queen))
+		{
+			std::pair<int, int> newPos = std::make_pair(Kpos.first + Kdir.first, Kpos.second + Kdir.second);
 
+			while ((board.getTeamColour(newPos.first, newPos.second) == piece->GetColour()) || \
+				(board.getTeamColour(newPos.first, newPos.second) == EColour::empty))
+			{
+				if (newPos != piece->GetPosition())
+				{
+					pinDestList.push_back(newPos);
+				}
+				newPos = std::make_pair(newPos.first + Kdir.first, newPos.second + Kdir.second);
+			}
+			pinDestList.push_back(newPos); // append the position of the attacking (pinning) piece to DestList
+		}
+		else if (piece->GetPieceType() == EPiece::pawn && (abs(Kdir.first) + abs(Kdir.second) == 2))
+		{
+			if ((board.getTeamColour(piece->GetPosition().first + Kdir.first, piece->GetPosition().second + Kdir.second) != \
+				EColour::empty) && ((piece->GetColour() == EColour::white && Kdir.second > 0) || \
+					piece->GetColour() == EColour::black && Kdir.second < 0))
+			{
+				// the piece imposing a pin on a pawn along a forward diagonal on an immediately adjacent square is the opposite colour
+				pinDestList.push_back(std::make_pair(piece->GetPosition().first + Kdir.first, \
+					piece->GetPosition().second + Kdir.second));
+			}
+		}
+		else
+		{
+			pinDestList = {}; // there is a pin, and the pinned piece cannot move
+		}
+
+	}
+	else
+	{
+		pinDestList = piece->GetDestinations(); // there is no pin -- get destinations normally
+	}
 
 	return pinDestList;
 }
