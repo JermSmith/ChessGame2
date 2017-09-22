@@ -152,42 +152,57 @@ void CGame::LeftClick(sf::Event event)
 	// first click was NOT ON our team, second click was ON our team
 	else if ((oldPiece->GetColour() != currentTeam) && (newPiece->GetColour() == currentTeam))
 	{
-		/*
 		bool bIsCheck = false;
 		std::vector<std::pair<int, int>> BlockCheckSpots = {};
 		std::vector<std::pair<int, int>> PreCheckDestList = {};
-		...
+		
+		std::pair<int, int> kingLocation = findKingLocation(currentTeam);
+
 		bIsCheck = bCheckIfCheck(kingLocation);
-		if (bIsCheck == true)
+		
+		if (bIsCheck == true) // game says king is in check, when this is not true. must investigate.
 		{
 			BlockCheckSpots = GetBlockCheckSpots(kingLocation);
-			--^^[[if AttackingSpots.size() > 1: king must move, BlockCheckSpots = {} (since more than one check)... if .size() == 1 && attacking pieceType == knight: BlockCheckSpots = {location of knight}... else: BlockCheckSpots = {populated vector}...]]
 			
-			PreCheckDestList = GetDestListCheckingForPin(newPiece);
-			for (unsigned int i_ = 0; i_ < PreCheckDestList.size(); i_++)
+			if (newPiece->GetPieceType() != EPiece::king)
 			{
-				for (unsigned int j_ == 0; j_ < BlockCheckSpots.size(); j_++)
+				PreCheckDestList = GetDestListCheckingForPin(newPiece);
+				for (unsigned int i_ = 0; i_ < PreCheckDestList.size(); i_++)
 				{
-					if (PreCheckDestList[i_] == BlockCheckSpots[j_])
+					for (unsigned int j_ = 0; j_ < BlockCheckSpots.size(); j_++)
 					{
-						DestList.push_back(BlockCheckSpots[j_]);
+						if (PreCheckDestList[i_] == BlockCheckSpots[j_])
+						{
+							DestList.push_back(BlockCheckSpots[j_]);
+						}
+					}
+				}
+			}
+			else // newPiece is a king, which is in check. need to get valid destinations for the king.
+			{
+				PreCheckDestList = GetDestListCheckingForPin(newPiece); // between 0 and 8 (otherwise) valid dests for the king
+				for (unsigned int i_ = 0; i_ < PreCheckDestList.size(); i_++)
+				{
+					if (bCheckIfCheck(PreCheckDestList[i_]) == false) // ***need to remove the stop if it hits king of same colour
+					{
+						DestList.push_back(PreCheckDestList[i_]);
+						int a1 = 1;
 					}
 				}
 			}
 		}
 		else
 		{
-			do regular things that would otherwise happen;
+			DestList = GetDestListCheckingForPin(newPiece);
+			board.highlightOn(newPiece->GetPosition(), DestList);
 		}
-		
+		/*
 		////
 		ALSO, TO GO AT BOTTOM OF LEFT CLICK FUNCTION:
-		BlockCheckSpots = GetBlockCheckSpots();
+		BlockCheckSpots = GetBlockCheckSpots(kingLocation);
 		CheckForCheckmate(kingLocation, BlockCheckSpots);
 		--^^[[if king has no valid destinations && for each piece_, GetDestListCheckingForPiece(piece_)[i_] != BlockCheckSpots[j_], then checkmate.]]
 		*/
-
-		DestList = GetDestListCheckingForPin(newPiece);
 
 		board.highlightOn(newPiece->GetPosition(), DestList);
 	}
@@ -205,7 +220,7 @@ void CGame::LeftClick(sf::Event event)
 		if (oldPiece->GetPosition() == newPiece->GetPosition()) //clicked on same piece twice in a row
 		{
 			// update DestList, depending if it is populated or not
-			if (DestList == std::vector<std::pair<int, int>> {}) // if CGame's list of destinations is empty...
+			if (DestList.size() == 0) // if CGame's list of destinations is empty...
 			{
 				// then populate it with destinations for the click provided
 				DestList = GetDestListCheckingForPin(newPiece);
@@ -266,6 +281,245 @@ bool CGame::bIsDestination(std::pair<int, int> click)
 	return IsDestination;
 }
 
+std::pair<int, int> CGame::findKingLocation(EColour colour)
+{
+	std::pair<int, int> kingLocation = std::make_pair(0, 0);
+	
+	for (unsigned int file = 0; file <= 7; file++)
+	{
+		for (unsigned int rank = 0; rank <= 7; rank++)
+		{
+			if (board.getPieceType(file, rank) == EPiece::king && board.getTeamColour(file, rank) == colour)
+			{
+				kingLocation = std::make_pair(file, rank);
+				return kingLocation;
+			}
+		}
+	}
+	return kingLocation; // never happens, because it is always returned earlier
+}
+
+bool CGame::bCheckIfCheck(std::pair<int, int> kingPos)
+{
+	bool bIsCheck = false;
+	std::vector<std::pair<int, int>> dir;
+	EColour kingColour = board.getTeamColour(kingPos.first, kingPos.second);
+
+	// first check if there is a pawn imposing check
+	int pawnForwardDir = to_int(kingColour)*2 - 1; //maps white->(-1), black->(1), since on white's turn black pawns are moving
+
+	if ((kingPos.first + 1 <= 7) && \
+		(kingPos.second - pawnForwardDir >= 0) && (kingPos.second - pawnForwardDir <= 7))
+	{
+		if ((board.getPieceType(kingPos.first + 1, kingPos.second - pawnForwardDir) == EPiece::pawn) && \
+			(board.getTeamColour(kingPos.first + 1, kingPos.second - pawnForwardDir) != kingColour))
+			// don't need to check for EColour::empty, because EPiece::pawn will be either black or white
+		{
+			bIsCheck = true;
+			return bIsCheck;
+		}
+	}
+	if ((kingPos.first - 1 >= 0) && \
+		(kingPos.second - pawnForwardDir >= 0) && (kingPos.second - pawnForwardDir <= 7))
+	{
+		if ((board.getPieceType(kingPos.first - 1, kingPos.second - pawnForwardDir) == EPiece::pawn) && \
+			(board.getTeamColour(kingPos.first - 1, kingPos.second - pawnForwardDir) != kingColour))
+			// don't need to check for EColour::empty, because EPiece::pawn will be either black or white
+		{
+			bIsCheck = true;
+			return bIsCheck;
+		}
+	}
+
+	// now check for knights imposing check
+	dir = { std::make_pair(-1, -2), std::make_pair(-2, -1), \
+		std::make_pair(-2, 1), std::make_pair(-1, 2), std::make_pair(1, 2), std::make_pair(2, 1), \
+		std::make_pair(2, -1), std::make_pair(1, -2) };
+
+	for (unsigned int i_ = 0; i_ < dir.size(); i_++)
+	{
+		if ((kingPos.first + dir[i_].first) >= 0 && (kingPos.first + dir[i_].first <= 7) && \
+			(kingPos.second + dir[i_].second >= 0) && (kingPos.second + dir[i_].second <= 7))
+			if ((board.getPieceType(kingPos.first + dir[i_].first, kingPos.second + dir[i_].second) == EPiece::knight) && \
+				(board.getTeamColour(kingPos.first + dir[i_].first, kingPos.second + dir[i_].second) != kingColour))
+				// don't need to check for EColour::empty, because EPiece::knight will be either black or white
+			{
+				bIsCheck = true;
+				return bIsCheck;
+			}
+	}
+
+	// now check for queens, rooks or bishops imposing check
+	dir = { std::make_pair(-1, -1), std::make_pair(-1, 0), \
+		std::make_pair(-1, 1), std::make_pair(0, 1), std::make_pair(1, 1), std::make_pair(1, 0), \
+		std::make_pair(1, -1), std::make_pair(0, -1) };
+	
+	std::pair<int, int> newPos;
+
+	for (unsigned int i_ = 0; i_ < dir.size(); i_++)
+	{
+		newPos = kingPos;
+		while ((newPos.first + dir[i_].first) >= 0 && (newPos.first + dir[i_].first <= 7) && \
+			(newPos.second + dir[i_].second >= 0) && (newPos.second + dir[i_].second <= 7))
+		{
+			if (board.getTeamColour(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == kingColour)
+			{
+				// piece hit is the same team, so no check applied on this line. break out of this direction search.
+				break;
+			}
+			else if ((board.getTeamColour(newPos.first + dir[i_].first, newPos.second + dir[i_].second) != kingColour) && \
+				(board.getTeamColour(newPos.first + dir[i_].first, newPos.second + dir[i_].second) != EColour::empty))
+			{
+				// piece hit is the opposite colour. Now check if it is a queen, or a rook or bishop depending on the direction search.
+				if ((board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == EPiece::queen) \
+					|| \
+					((board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == EPiece::rook) && \
+					(abs(dir[i_].first) + abs(dir[i_].second) == 1)) \
+					|| \
+					((board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == EPiece::bishop) && \
+					(abs(dir[i_].first) + abs(dir[i_].second) == 2)))
+				{
+					// piece hit is a queen, or a rook on an orthogonal, or a bishop on a diagonal, so the king is in check
+					bIsCheck = true;
+					return bIsCheck;
+				}
+			}
+
+			newPos = std::make_pair(newPos.first + dir[i_].first, newPos.second + dir[i_].second);
+		}
+	}
+
+	return bIsCheck; // will be false if the function has not returned true by this point.
+}
+
+std::vector<std::pair<int, int>> CGame::GetBlockCheckSpots(std::pair<int, int> kingPos)
+{
+	// Note: it is assumed entering this function that the king is in check.
+	// The list of spaces on the board that could block a check starts empty, and gets populated.
+	std::vector<std::pair<int, int>> blockCheckSpots = {};
+	
+	// the number of pieces imposing a check on the king. Does not apply for pawns, as if a pawn imposes check, it is the only piece.
+	int NumAttackingPieces = 0;
+
+	std::vector<std::pair<int, int>> dir;
+	EColour kingColour = board.getTeamColour(kingPos.first, kingPos.second);
+
+	// look for the position of a pawn imposing check.
+	int pawnForwardDir = to_int(kingColour)*2 - 1; //maps white->(-1), black->(1), since on white's turn black pawns are moving
+
+	if ((kingPos.first + 1) <= 7 && \
+		(kingPos.second - pawnForwardDir >= 0) && (kingPos.second - pawnForwardDir <= 7))
+	{
+		if ((board.getPieceType(kingPos.first + 1, kingPos.second - pawnForwardDir) == EPiece::pawn) && \
+			(board.getTeamColour(kingPos.first + 1, kingPos.second - pawnForwardDir) != kingColour))
+			// don't need to check for EColour::empty, because EPiece::pawn will be either black or white
+		{
+			// add the location of the pawn imposing check to blockCheckSpots
+			blockCheckSpots.push_back(std::make_pair(kingPos.first + 1, kingPos.second - pawnForwardDir));
+			
+			// do not need to do NumAttackingPieces for pawns, since if a pawn is attacking, it must be the only piece attacking
+		}
+	}
+	if ((kingPos.first - 1) >= 0 && \
+		(kingPos.second - pawnForwardDir >= 0) && (kingPos.second - pawnForwardDir <= 7))
+	{
+		if	((board.getPieceType(kingPos.first - 1, kingPos.second - pawnForwardDir) == EPiece::pawn) && \
+			(board.getTeamColour(kingPos.first - 1, kingPos.second - pawnForwardDir) != kingColour))
+			// don't need to check for EColour::empty, because EPiece::pawn will be either black or white
+		{
+			// add the location of the pawn imposing check to blockCheckSpots
+			blockCheckSpots.push_back(std::make_pair(kingPos.first - 1, kingPos.second - pawnForwardDir));
+			
+			// do not need to do NumAttackingPieces for pawns, since if a pawn is attacking, it must be the only piece attacking
+		}
+	}
+
+	// if a pawn is imposing check, it must be the only piece imposing check, so we can leave early.
+	// here, blockCheckSpots contains only the one location of the pawn imposing check.
+	if (blockCheckSpots.size() != 0) { return blockCheckSpots; }
+	
+	// look for the position of a knight imposing check. Only one knight may impose check at once.
+	dir = { std::make_pair(-1, -2), std::make_pair(-2, -1), \
+		std::make_pair(-2, 1), std::make_pair(-1, 2), std::make_pair(1, 2), std::make_pair(2, 1), \
+		std::make_pair(2, -1), std::make_pair(1, -2) };
+
+	for (unsigned int i_ = 0; i_ < dir.size(); i_++)
+	{
+		if ((kingPos.first + dir[i_].first) >= 0 && (kingPos.first + dir[i_].first <= 7) && \
+			(kingPos.second + dir[i_].second >= 0) && (kingPos.second + dir[i_].second <= 7))
+			if ((board.getPieceType(kingPos.first + dir[i_].first, kingPos.second + dir[i_].second) == EPiece::knight) && \
+				(board.getTeamColour(kingPos.first + dir[i_].first, kingPos.second + dir[i_].second) != kingColour))
+				// don't need to check for EColour::empty, because EPiece::knight will be either black or white
+			{
+				// add the location of attacking knight to blockCheckSpots
+				blockCheckSpots.push_back(std::make_pair(kingPos.first + dir[i_].first, kingPos.second + dir[i_].second));
+				// increment NumAttackingPieces by 1
+				NumAttackingPieces = NumAttackingPieces + 1;
+				break; // can exit the knight searching loop, since we found one knight imposing check so there can be no other knights
+			}
+	}
+
+	// look for the position of queens, rooks or bishops imposing check.
+	dir = { std::make_pair(-1, -1), std::make_pair(-1, 0), \
+		std::make_pair(-1, 1), std::make_pair(0, 1), std::make_pair(1, 1), std::make_pair(1, 0), \
+		std::make_pair(1, -1), std::make_pair(0, -1) };
+
+	std::pair<int, int> newPos;
+
+	for (unsigned int i_ = 0; i_ < dir.size(); i_++)
+	{
+		newPos = kingPos;
+		while ((newPos.first + dir[i_].first) >= 0 && (newPos.first + dir[i_].first <= 7) && \
+			(newPos.second + dir[i_].second >= 0) && (newPos.second + dir[i_].second <= 7))
+		{
+			if (board.getTeamColour(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == kingColour)
+			{
+				// piece hit is the same team, so no check applied on this line. break out of this direction search.
+				break;
+			}
+			else if ((board.getTeamColour(newPos.first + dir[i_].first, newPos.second + dir[i_].second) != kingColour) && \
+				(board.getTeamColour(newPos.first + dir[i_].first, newPos.second + dir[i_].second) != EColour::empty))
+			{
+				// piece hit is the opposite colour. Now check if it is a queen, or a rook or bishop depending on the direction search.
+				if ((board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == EPiece::queen) \
+					|| \
+					((board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == EPiece::rook) && \
+					(abs(dir[i_].first) + abs(dir[i_].second) == 1)) \
+					|| \
+					((board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == EPiece::bishop) && \
+					(abs(dir[i_].first) + abs(dir[i_].second) == 2)))
+				{
+					// piece hit is a queen, or a rook on an orthogonal, or a bishop on a diagonal, so the king is in check.
+					// now add all spaces from attacking piece up to (not including) king into blockCheckSpots.
+					// newPos initially becomes the position of the attacking piece.
+					newPos = std::make_pair(newPos.first + dir[i_].first, newPos.second + dir[i_].second);
+					
+					// increment NumAttackingPieces by 1
+					NumAttackingPieces = NumAttackingPieces + 1;
+					
+					while (newPos != kingPos)
+					{
+						blockCheckSpots.push_back(std::make_pair(newPos.first, newPos.second));
+						
+						// move from the attacking piece back to the king
+						newPos = std::make_pair(newPos.first - dir[i_].first, newPos.second - dir[i_].second);
+					}
+					break; // this searching direction is completed. proceed to the next direction.
+				}
+			}
+
+			newPos = std::make_pair(newPos.first + dir[i_].first, newPos.second + dir[i_].second);
+		}
+	}
+
+	// if more than one piece attacking: check cannot be blocked (king must move) --> BlockCheckSpots = {}
+	if (NumAttackingPieces > 1) { blockCheckSpots = {}; }
+	// 	else: BlockCheckSpots = {regularly populated vector}
+
+	return blockCheckSpots;
+}
+
+// returns dest list for a selected piece, excluding destinations that would reveal a check on the king
 std::vector<std::pair<int, int>> CGame::GetDestListCheckingForPin(CPiece* piece)
 {
 	bool bIsPin = false;
@@ -364,7 +618,7 @@ std::vector<std::pair<int, int>> CGame::GetDestListCheckingForPin(CPiece* piece)
 			}
 		}
 	}
-	//return bIsPin;
+	
 	std::vector<std::pair<int, int>> pinDestList = {};
 
 	if (bIsPin)
