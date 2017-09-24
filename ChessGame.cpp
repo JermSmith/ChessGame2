@@ -150,19 +150,19 @@ void CGame::LeftClick(sf::Event event)
 	}
 
 	// first click was NOT ON our team, second click was ON our team
-	else if ((oldPiece->GetColour() != currentTeam) && (newPiece->GetColour() == currentTeam))
+	else if ((oldPiece->GetColour() != currentTeamColour) && (newPiece->GetColour() == currentTeamColour))
 	{
 		bool bIsCheck = false;
 		std::vector<std::pair<int, int>> BlockCheckSpots = {};
 		std::vector<std::pair<int, int>> PreCheckDestList = {};
 		
-		std::pair<int, int> kingLocation = findKingLocation(currentTeam);
+		kingPosition = findKingPosition(currentTeamColour);
 
-		bIsCheck = bCheckIfCheck(kingLocation);
+		bIsCheck = bCheckIfCheck(kingPosition);
 		
 		if (bIsCheck == true) // game says king is in check, when this is not true. must investigate.
 		{
-			BlockCheckSpots = GetBlockCheckSpots(kingLocation);
+			BlockCheckSpots = GetBlockCheckSpots(kingPosition);
 			
 			if (newPiece->GetPieceType() != EPiece::king)
 			{
@@ -183,15 +183,35 @@ void CGame::LeftClick(sf::Event event)
 				PreCheckDestList = GetDestListCheckingForPin(newPiece); // between 0 and 8 (otherwise) valid dests for the king
 				for (unsigned int i_ = 0; i_ < PreCheckDestList.size(); i_++)
 				{
-					if (bCheckIfCheck(PreCheckDestList[i_]) == false) // ***need to remove the stop if it hits king of same colour
+					// record the original piecetype and colour of the destination space
+					EPiece origDestPiece = board.getPieceType(PreCheckDestList[i_].first, PreCheckDestList[i_].second);
+					EColour origDestColour = board.getTeamColour(PreCheckDestList[i_].first, PreCheckDestList[i_].second);
+					
+					// temporarily set the king's position to be empty when checking for check in a possible destination
+					board.setPieceType(kingPosition.first, kingPosition.second, EPiece::empty);
+					board.setTeamColour(kingPosition.first, kingPosition.second, EColour::empty);
+
+					// temporarily move king to a possible destination to check for check in each destination.
+					board.setPieceType(PreCheckDestList[i_].first, PreCheckDestList[i_].second, EPiece::king);
+					board.setTeamColour(PreCheckDestList[i_].first, PreCheckDestList[i_].second, currentTeamColour);
+
+					if (bCheckIfCheck(PreCheckDestList[i_]) == false)
 					{
+						// the king would be out of check in the new destination, so it is a valid destination
 						DestList.push_back(PreCheckDestList[i_]);
-						int a1 = 1;
 					}
+					
+					// after checking, put the king back in its original position.
+					board.setPieceType(kingPosition.first, kingPosition.second, EPiece::king);
+					board.setTeamColour(kingPosition.first, kingPosition.second, currentTeamColour);
+					
+					// replace the original piece to the destination that was checked
+					board.setPieceType(PreCheckDestList[i_].first, PreCheckDestList[i_].second, origDestPiece);
+					board.setTeamColour(PreCheckDestList[i_].first, PreCheckDestList[i_].second, origDestColour);
 				}
 			}
 		}
-		else
+		else // not in check
 		{
 			DestList = GetDestListCheckingForPin(newPiece);
 			board.highlightOn(newPiece->GetPosition(), DestList);
@@ -199,8 +219,8 @@ void CGame::LeftClick(sf::Event event)
 		/*
 		////
 		ALSO, TO GO AT BOTTOM OF LEFT CLICK FUNCTION:
-		BlockCheckSpots = GetBlockCheckSpots(kingLocation);
-		CheckForCheckmate(kingLocation, BlockCheckSpots);
+		BlockCheckSpots = GetBlockCheckSpots(kingPosition);
+		CheckForCheckmate(kingPosition, BlockCheckSpots);
 		--^^[[if king has no valid destinations && for each piece_, GetDestListCheckingForPiece(piece_)[i_] != BlockCheckSpots[j_], then checkmate.]]
 		*/
 
@@ -208,14 +228,14 @@ void CGame::LeftClick(sf::Event event)
 	}
 	
 	// first click was ON our team, second click was NOT ON our team (also not a destination, since checked earlier)
-	else if ((oldPiece->GetColour() == currentTeam) && (newPiece->GetColour() != currentTeam))
+	else if ((oldPiece->GetColour() == currentTeamColour) && (newPiece->GetColour() != currentTeamColour))
 	{
 		board.highlightOff(oldPiece->GetPosition(), DestList);
 		DestList = {};
 	}
 	
 	// first click was ON our team, second click was ON our team (could be same piece or different)
-	else if ((oldPiece->GetColour() == currentTeam) && (newPiece->GetColour() == currentTeam))
+	else if ((oldPiece->GetColour() == currentTeamColour) && (newPiece->GetColour() == currentTeamColour))
 	{
 		if (oldPiece->GetPosition() == newPiece->GetPosition()) //clicked on same piece twice in a row
 		{
@@ -281,9 +301,9 @@ bool CGame::bIsDestination(std::pair<int, int> click)
 	return IsDestination;
 }
 
-std::pair<int, int> CGame::findKingLocation(EColour colour)
+std::pair<int, int> CGame::findKingPosition(EColour colour)
 {
-	std::pair<int, int> kingLocation = std::make_pair(0, 0);
+	std::pair<int, int> kingPosition = std::make_pair(0, 0);
 	
 	for (unsigned int file = 0; file <= 7; file++)
 	{
@@ -291,12 +311,12 @@ std::pair<int, int> CGame::findKingLocation(EColour colour)
 		{
 			if (board.getPieceType(file, rank) == EPiece::king && board.getTeamColour(file, rank) == colour)
 			{
-				kingLocation = std::make_pair(file, rank);
-				return kingLocation;
+				kingPosition = std::make_pair(file, rank);
+				return kingPosition;
 			}
 		}
 	}
-	return kingLocation; // never happens, because it is always returned earlier
+	return kingPosition; // never happens, because it is always returned earlier
 }
 
 bool CGame::bCheckIfCheck(std::pair<int, int> kingPos)
@@ -348,7 +368,28 @@ bool CGame::bCheckIfCheck(std::pair<int, int> kingPos)
 				return bIsCheck;
 			}
 	}
+	
+	/*
+	// now check for the opposing king imposing check
+	// (used when assuming the king moves to a destination adjacent to the opposing king)
+	dir = { std::make_pair(-1, -1), std::make_pair(-1, 0), \
+		std::make_pair(-1, 1), std::make_pair(0, 1), std::make_pair(1, 1), std::make_pair(1, 0), \
+		std::make_pair(1, -1), std::make_pair(0, -1) };
 
+	for (unsigned int i_ = 0; i_ < dir.size(); i_++)
+	{
+		if ((kingPos.first + dir[i_].first) >= 0 && (kingPos.first + dir[i_].first <= 7) && \
+			(kingPos.second + dir[i_].second >= 0) && (kingPos.second + dir[i_].second <= 7))
+		{
+			if (board.getPieceType(kingPos.first + dir[i_].first, kingPos.second + dir[i_].second) == EPiece::king)
+			{
+				bIsCheck = true;
+				return bIsCheck;
+			}
+		}
+	}
+	*/
+	
 	// now check for queens, rooks or bishops imposing check
 	dir = { std::make_pair(-1, -1), std::make_pair(-1, 0), \
 		std::make_pair(-1, 1), std::make_pair(0, 1), std::make_pair(1, 1), std::make_pair(1, 0), \
@@ -668,15 +709,15 @@ std::vector<std::pair<int, int>> CGame::GetDestListCheckingForPin(CPiece* piece)
 // switches the team whose turn it is to move
 void CGame::switchTeam()
 {
-	if (currentTeam == EColour::white) { currentTeam = EColour::black; }
-	else { currentTeam = EColour::white; }
+	if (currentTeamColour == EColour::white) { currentTeamColour = EColour::black; }
+	else { currentTeamColour = EColour::white; }
 	return;
 }
 
 void CGame::checkPawnPromotion()
 {
 	int lastRank; // maps white -> 7, black -> 0
-	if (currentTeam == EColour::white) { lastRank = 7; }
+	if (currentTeamColour == EColour::white) { lastRank = 7; }
 	else { lastRank = 0; }
 
 	for (unsigned int file = 0; file <= 7; file++)

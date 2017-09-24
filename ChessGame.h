@@ -18,7 +18,8 @@ private:
 	sf::Sprite* ptrPieceSprite;
 	sf::Sprite* ptrBoardTileSprite;
 
-	EColour currentTeam = EColour::white;
+	EColour currentTeamColour = EColour::white;
+	std::pair<int, int> kingPosition;
 
 	std::vector<std::pair<int, int>> DestList = {};
 
@@ -28,7 +29,7 @@ private:
 
 	bool bIsDestination(std::pair<int, int>);
 
-	std::pair<int, int> findKingLocation(EColour);
+	std::pair<int, int> findKingPosition(EColour);
 
 	bool bCheckIfCheck(std::pair<int, int>);
 
