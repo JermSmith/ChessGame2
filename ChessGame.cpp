@@ -136,7 +136,18 @@ void CGame::LeftClick(sf::Event event)
 	oldPiece->calcDestinations(&board);
 	newPiece->calcDestinations(&board);
 
-	if (bIsDestination(newPiece->GetPosition())) // clicked on a valid destination, based on DestList
+	bool bIsDestination = false;
+	// becomes true if newPiece position matches any of the destinations in DestList.
+	for (unsigned int dest = 0; dest < DestList.size(); dest++)
+	{
+		if (newPiece->GetPosition().first == DestList[dest].first && newPiece->GetPosition().second == DestList[dest].second)
+		{
+			bIsDestination = true;
+			break;
+		}
+	}
+
+	if (bIsDestination) // clicked on a valid destination, based on DestList
 	{
 		board.highlightOff(oldPiece->GetPosition(), oldPiece->GetDestinations());
 
@@ -152,72 +163,9 @@ void CGame::LeftClick(sf::Event event)
 	// first click was NOT ON our team, second click was ON our team
 	else if ((oldPiece->GetColour() != currentTeamColour) && (newPiece->GetColour() == currentTeamColour))
 	{
-		bool bIsCheck = false;
-		std::vector<std::pair<int, int>> BlockCheckSpots = {};
-		std::vector<std::pair<int, int>> PreCheckDestList = {};
-		
-		kingPosition = findKingPosition(currentTeamColour);
+		DestList = ObtainValidDestinationsForAnyPiece(newPiece);
 
-		bIsCheck = bCheckIfCheck(kingPosition);
-		
-		if (bIsCheck == true) // game says king is in check, when this is not true. must investigate.
-		{
-			BlockCheckSpots = GetBlockCheckSpots(kingPosition);
-			
-			if (newPiece->GetPieceType() != EPiece::king)
-			{
-				PreCheckDestList = GetDestListCheckingForPin(newPiece);
-				for (unsigned int i_ = 0; i_ < PreCheckDestList.size(); i_++)
-				{
-					for (unsigned int j_ = 0; j_ < BlockCheckSpots.size(); j_++)
-					{
-						if (PreCheckDestList[i_] == BlockCheckSpots[j_])
-						{
-							DestList.push_back(BlockCheckSpots[j_]);
-						}
-					}
-				}
-			}
-			else // newPiece is a king, which is in check. need to get valid destinations for the king.
-			{
-				PreCheckDestList = GetDestListCheckingForPin(newPiece); // between 0 and 8 (otherwise) valid dests for the king
-				for (unsigned int i_ = 0; i_ < PreCheckDestList.size(); i_++)
-				{
-					// record the original piecetype and colour of the destination space
-					EPiece origDestPiece = board.getPieceType(PreCheckDestList[i_].first, PreCheckDestList[i_].second);
-					EColour origDestColour = board.getTeamColour(PreCheckDestList[i_].first, PreCheckDestList[i_].second);
-					
-					// temporarily set the king's position to be empty when checking for check in a possible destination
-					board.setPieceType(kingPosition.first, kingPosition.second, EPiece::empty);
-					board.setTeamColour(kingPosition.first, kingPosition.second, EColour::empty);
-
-					// temporarily move king to a possible destination to check for check in each destination.
-					board.setPieceType(PreCheckDestList[i_].first, PreCheckDestList[i_].second, EPiece::king);
-					board.setTeamColour(PreCheckDestList[i_].first, PreCheckDestList[i_].second, currentTeamColour);
-
-					if (bCheckIfCheck(PreCheckDestList[i_]) == false)
-					{
-						// the king would be out of check in the new destination, so it is a valid destination
-						DestList.push_back(PreCheckDestList[i_]);
-					}
-					
-					// after checking, put the king back in its original position.
-					board.setPieceType(kingPosition.first, kingPosition.second, EPiece::king);
-					board.setTeamColour(kingPosition.first, kingPosition.second, currentTeamColour);
-					
-					// replace the original piece to the destination that was checked
-					board.setPieceType(PreCheckDestList[i_].first, PreCheckDestList[i_].second, origDestPiece);
-					board.setTeamColour(PreCheckDestList[i_].first, PreCheckDestList[i_].second, origDestColour);
-				}
-			}
-		}
-		else // not in check
-		{
-			DestList = GetDestListCheckingForPin(newPiece);
-			board.highlightOn(newPiece->GetPosition(), DestList);
-		}
 		/*
-		////
 		ALSO, TO GO AT BOTTOM OF LEFT CLICK FUNCTION:
 		BlockCheckSpots = GetBlockCheckSpots(kingPosition);
 		CheckForCheckmate(kingPosition, BlockCheckSpots);
@@ -243,7 +191,7 @@ void CGame::LeftClick(sf::Event event)
 			if (DestList.size() == 0) // if CGame's list of destinations is empty...
 			{
 				// then populate it with destinations for the click provided
-				DestList = GetDestListCheckingForPin(newPiece);
+				DestList = ObtainValidDestinationsForAnyPiece(newPiece);
 
 				board.highlightToggle(newPiece->GetPosition(), DestList);
 			}
@@ -258,7 +206,7 @@ void CGame::LeftClick(sf::Event event)
 		{
 			board.highlightOff(oldPiece->GetPosition(), DestList);
 
-			DestList = GetDestListCheckingForPin(newPiece);
+			DestList = ObtainValidDestinationsForAnyPiece(newPiece);
 
 			board.highlightOn(newPiece->GetPosition(), DestList);
 		}
@@ -286,6 +234,7 @@ bool CGame::bClickOffBoard(std::pair<int, int> click)
 	return bClickOffBoard;
 }
 
+/*
 bool CGame::bIsDestination(std::pair<int, int> click)
 {
 	bool IsDestination = false;
@@ -300,6 +249,7 @@ bool CGame::bIsDestination(std::pair<int, int> click)
 	}
 	return IsDestination;
 }
+*/
 
 std::pair<int, int> CGame::findKingPosition(EColour colour)
 {
@@ -367,28 +317,7 @@ bool CGame::bCheckIfCheck(std::pair<int, int> kingPos)
 				bIsCheck = true;
 				return bIsCheck;
 			}
-	}
-	
-	/*
-	// now check for the opposing king imposing check
-	// (used when assuming the king moves to a destination adjacent to the opposing king)
-	dir = { std::make_pair(-1, -1), std::make_pair(-1, 0), \
-		std::make_pair(-1, 1), std::make_pair(0, 1), std::make_pair(1, 1), std::make_pair(1, 0), \
-		std::make_pair(1, -1), std::make_pair(0, -1) };
-
-	for (unsigned int i_ = 0; i_ < dir.size(); i_++)
-	{
-		if ((kingPos.first + dir[i_].first) >= 0 && (kingPos.first + dir[i_].first <= 7) && \
-			(kingPos.second + dir[i_].second >= 0) && (kingPos.second + dir[i_].second <= 7))
-		{
-			if (board.getPieceType(kingPos.first + dir[i_].first, kingPos.second + dir[i_].second) == EPiece::king)
-			{
-				bIsCheck = true;
-				return bIsCheck;
-			}
-		}
-	}
-	*/
+	}	
 	
 	// now check for queens, rooks or bishops imposing check
 	dir = { std::make_pair(-1, -1), std::make_pair(-1, 0), \
@@ -412,7 +341,15 @@ bool CGame::bCheckIfCheck(std::pair<int, int> kingPos)
 				(board.getTeamColour(newPos.first + dir[i_].first, newPos.second + dir[i_].second) != EColour::empty))
 			{
 				// piece hit is the opposite colour. Now check if it is a queen, or a rook or bishop depending on the direction search.
-				if ((board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == EPiece::queen) \
+				if ((board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) != EPiece::queen) && \
+					(board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) != EPiece::rook) && \
+					(board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) != EPiece::bishop))
+				{
+					// piece hit is not a queen, nor a rook, nor a bishop, so no check is applied from this direction
+					break; // break out of this direction search
+				}
+			
+				else if ((board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == EPiece::queen) \
 					|| \
 					((board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == EPiece::rook) && \
 					(abs(dir[i_].first) + abs(dir[i_].second) == 1)) \
@@ -427,6 +364,25 @@ bool CGame::bCheckIfCheck(std::pair<int, int> kingPos)
 			}
 
 			newPos = std::make_pair(newPos.first + dir[i_].first, newPos.second + dir[i_].second);
+		}
+	}
+
+	// now check for the opposing king imposing check
+	// (used when assuming the king moves to a destination adjacent to the opposing king)
+	dir = { std::make_pair(-1, -1), std::make_pair(-1, 0), \
+		std::make_pair(-1, 1), std::make_pair(0, 1), std::make_pair(1, 1), std::make_pair(1, 0), \
+		std::make_pair(1, -1), std::make_pair(0, -1) };
+
+	for (unsigned int i_ = 0; i_ < dir.size(); i_++)
+	{
+		if ((kingPos.first + dir[i_].first) >= 0 && (kingPos.first + dir[i_].first <= 7) && \
+			(kingPos.second + dir[i_].second >= 0) && (kingPos.second + dir[i_].second <= 7))
+		{
+			if (board.getPieceType(kingPos.first + dir[i_].first, kingPos.second + dir[i_].second) == EPiece::king)
+			{
+				bIsCheck = true;
+				return bIsCheck;
+			}
 		}
 	}
 
@@ -560,12 +516,12 @@ std::vector<std::pair<int, int>> CGame::GetBlockCheckSpots(std::pair<int, int> k
 	return blockCheckSpots;
 }
 
-// returns dest list for a selected piece, excluding destinations that would reveal a check on the king
+// returns destinations list for a selected piece, excluding destinations that would reveal a check on the king
 std::vector<std::pair<int, int>> CGame::GetDestListCheckingForPin(CPiece* piece)
 {
 	bool bIsPin = false;
 
-	// position of king, used immediately after calculation, specifically for checking pins
+	// position of king, used immediately after its determination, specifically for checking pins.
 	std::pair<int, int> Kpos;
 	// direction away from king to the piece in question which may be pinned -- reset to (0,0) 
 	std::pair<int, int> Kdir = std::make_pair(0,0); 
@@ -608,7 +564,7 @@ std::vector<std::pair<int, int>> CGame::GetDestListCheckingForPin(CPiece* piece)
 		// king has been found -- exit the for loop early (going through each possible direction from the piece)
 	}
 
-	if (Kdir.first == 0 && Kdir.second == 0) // Kdir unchanged -- no valid direction found for facing king
+	if (Kdir.first == 0 && Kdir.second == 0) // Kdir unchanged -- no valid direction found to encounter king in a line
 	{
 		bIsPin = false; // the piece in question is not facing the king, so cannot be pinned
 	}
@@ -704,6 +660,101 @@ std::vector<std::pair<int, int>> CGame::GetDestListCheckingForPin(CPiece* piece)
 	}
 
 	return pinDestList;
+}
+
+/* a function that receives the original list of king destinations (not considering check), 
+and returns the list of king destinations that do not put the king in check. */
+std::vector<std::pair<int, int>> CGame::RemoveDestinationsWhereKingInCheck(std::vector<std::pair<int, int>> uncensoredKingDestList)
+{
+	// the vector to be populated with destinations that will not put the king in check
+	std::vector<std::pair<int, int>> censoredKingDestList = {};
+
+	for (unsigned int i_ = 0; i_ < uncensoredKingDestList.size(); i_++)
+	{
+		// record the original piecetype and colour of the destination space
+		EPiece origDestPiece = board.getPieceType(uncensoredKingDestList[i_].first, uncensoredKingDestList[i_].second);
+		EColour origDestColour = board.getTeamColour(uncensoredKingDestList[i_].first, uncensoredKingDestList[i_].second);
+
+		// temporarily set the king's position to be empty when checking for check in a possible destination for the king
+		board.setPieceType(kingPosition.first, kingPosition.second, EPiece::empty);
+		board.setTeamColour(kingPosition.first, kingPosition.second, EColour::empty);
+
+		// temporarily move king to a possible destination to check for check in each destination.
+		board.setPieceType(uncensoredKingDestList[i_].first, uncensoredKingDestList[i_].second, EPiece::king);
+		board.setTeamColour(uncensoredKingDestList[i_].first, uncensoredKingDestList[i_].second, currentTeamColour);
+
+		if (!bCheckIfCheck(uncensoredKingDestList[i_])) // notice the !
+		{
+			// the king would be out of check in the new destination, so it is a valid destination
+			censoredKingDestList.push_back(uncensoredKingDestList[i_]);
+		}
+
+		// after checking, put the king back in its original position.
+		board.setPieceType(kingPosition.first, kingPosition.second, EPiece::king);
+		board.setTeamColour(kingPosition.first, kingPosition.second, currentTeamColour);
+
+		// replace the original piece to the destination that was checked
+		board.setPieceType(uncensoredKingDestList[i_].first, uncensoredKingDestList[i_].second, origDestPiece);
+		board.setTeamColour(uncensoredKingDestList[i_].first, uncensoredKingDestList[i_].second, origDestColour);
+	}
+	return censoredKingDestList;
+}
+
+/* A function that wraps all functionality together for calculating and returning the list of valid destinations for
+any selected piece. Receives newPiece (type CPiece*) as input, and returns a vector of destinations for newPiece. */
+std::vector<std::pair<int, int>> CGame::ObtainValidDestinationsForAnyPiece(CPiece* piece)
+{
+	std::vector<std::pair<int, int>> destlist;
+
+	bool bIsCheck = false;
+	std::vector<std::pair<int, int>> BlockCheckSpots = {};
+	std::vector<std::pair<int, int>> UncensoredDestList = {};
+
+	kingPosition = findKingPosition(currentTeamColour);
+
+	bIsCheck = bCheckIfCheck(kingPosition);
+	
+	if (bIsCheck == true)
+	{
+		BlockCheckSpots = GetBlockCheckSpots(kingPosition);
+
+		if (piece->GetPieceType() != EPiece::king)
+		{
+			UncensoredDestList = GetDestListCheckingForPin(piece);
+			for (unsigned int i_ = 0; i_ < UncensoredDestList.size(); i_++)
+			{
+				for (unsigned int j_ = 0; j_ < BlockCheckSpots.size(); j_++)
+				{
+					if (UncensoredDestList[i_] == BlockCheckSpots[j_])
+					{
+						destlist.push_back(BlockCheckSpots[j_]);
+					}
+				}
+			}
+		}
+		else // newPiece is a king, which is in check. need to get valid destinations for the king.
+		{
+			UncensoredDestList = GetDestListCheckingForPin(piece); // between 0 and 8 (otherwise) valid dests for the king
+
+			destlist = RemoveDestinationsWhereKingInCheck(UncensoredDestList);
+		}
+	}
+	else // not in check
+	{
+		if (piece->GetPieceType() != EPiece::king)
+		{
+			// selected piece is not a king, and king is not in check
+			destlist = GetDestListCheckingForPin(piece);
+		}
+		else // newPiece is a king, which is not in check
+		{
+			// the king may have destinations removed since it cannot place itself in check
+			UncensoredDestList = GetDestListCheckingForPin(piece); // between 0 and 8 (otherwise) valid dests for the king
+
+			destlist = RemoveDestinationsWhereKingInCheck(UncensoredDestList);
+		}
+	}
+	return destlist;
 }
 
 // switches the team whose turn it is to move
