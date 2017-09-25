@@ -4,7 +4,6 @@ CKnight::CKnight(EColour colour)
 {
 	SetColour(colour);
 	SetPieceType(EPiece::knight);
-	SetRangeType(ERange::fixed);
 }
 
 void CKnight::calcDestinations(CBoard* board)

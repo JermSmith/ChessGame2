@@ -4,7 +4,6 @@ CRook::CRook(EColour colour)
 {
 	SetColour(colour);
 	SetPieceType(EPiece::rook);
-	SetRangeType(ERange::varies);
 }
 
 void CRook::calcDestinations(CBoard* board)

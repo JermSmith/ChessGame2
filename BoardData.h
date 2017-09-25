@@ -71,6 +71,8 @@ class CBoard
 public:
 	CBoard(); // constructor
 
+	void ResetBoard();
+
 	void setTeamColour(int, int, EColour);
 	void setPieceType(int, int, EPiece);
 	void resetPieceSprite(int, int);
@@ -87,9 +89,7 @@ public:
 
 	void movePiece(std::pair<int, int>, std::pair<int, int>);
 
-private:
-	void ResetBoard();
-	
+private:	
 	std::vector < std::vector < std::tuple < EColour, EPiece, sf::Sprite, sf::Sprite > > > BoardData;
 
 	sf::Texture BoardTexture;

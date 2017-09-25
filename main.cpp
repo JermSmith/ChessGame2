@@ -19,8 +19,8 @@ void PlayGame()
 
 	while (window.isOpen())
 	{
-		bool bGameIsWon = false;
-		while (!bGameIsWon)
+		bool bGameIsOver = false;
+		while (!bGameIsOver)
 		{
 			sf::Event event;
 			while (window.pollEvent(event))
@@ -28,7 +28,7 @@ void PlayGame()
 				// check different event types
 				if (event.type == sf::Event::Closed)
 				{
-					bGameIsWon = true;
+					bGameIsOver = true;
 					window.close();
 				}
 
@@ -41,7 +41,7 @@ void PlayGame()
 					else if (event.mouseButton.button == sf::Mouse::Right)
 					{
 						window.setSize(sf::Vector2u(PIX_MPL * 11, PIX_MPL * 8));
-						window.setPosition(sf::Vector2i(127, 127));
+						window.setPosition(sf::Vector2i(331, 128));
 					}
 				}
 			}
@@ -55,6 +55,17 @@ void PlayGame()
 				{
 					window.draw(*Game.PassAlongBoardSprite(file, rank)); // draw the background associated with that (file, rank)
 					window.draw(*Game.PassAlongPieceSprite(file, rank)); // draw the piece sprite associated with that (file, rank)
+					window.draw(*Game.PassAlongTitleTxt()); // draw the title
+					window.draw(*Game.PassAlongCurrentTeamTxt()); // display whose turn it is
+					window.draw(*Game.PassAlongCreditsTxt()); // draw the credits
+					window.draw(*Game.PassAlongStaleOrCheckmateTxt()); // draw a potential checkmate message
+					window.draw(*Game.PassAlongWinnerTxt());
+					window.draw(*Game.PassAlongResetButton());
+					window.draw(*Game.PassAlongResetTxt());
+					window.draw(*Game.PassAlongPlayAgainButton());
+					window.draw(*Game.PassAlongPlayAgainTxt());
+					window.draw(*Game.PassAlongQuitButton());
+					window.draw(*Game.PassAlongQuitTxt());
 				}
 			}
 

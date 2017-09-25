@@ -4,7 +4,6 @@ CBishop::CBishop(EColour colour)
 {
 	SetColour(colour);
 	SetPieceType(EPiece::bishop);
-	SetRangeType(ERange::varies);
 }
 
 void CBishop::calcDestinations(CBoard* board)

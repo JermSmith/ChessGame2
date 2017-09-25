@@ -80,7 +80,6 @@ public:
 
 	void SetColour(EColour);
 	void SetPieceType(EPiece);
-	void SetRangeType(ERange);
 	void SetPosition(int, int);
 	void SetDestinations(std::vector<std::pair<int, int>>);
 

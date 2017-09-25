@@ -4,7 +4,6 @@ CQueen::CQueen(EColour colour)
 {
 	SetColour(colour);
 	SetPieceType(EPiece::queen);
-	SetRangeType(ERange::varies);
 }
 
 void CQueen::calcDestinations(CBoard* board)

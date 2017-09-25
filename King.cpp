@@ -4,7 +4,6 @@ CKing::CKing(EColour colour)
 {
 	SetColour(colour);
 	SetPieceType(EPiece::king);
-	SetRangeType(ERange::fixed);
 }
 
 void CKing::calcDestinations(CBoard* board)

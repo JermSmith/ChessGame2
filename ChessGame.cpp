@@ -13,6 +13,68 @@ CBoard board;
 
 CGame::CGame()
 {
+	if (!font.loadFromFile("LCALLIG.TTF"))
+	{
+		font.loadFromFile("LCALLIG.TTF");
+	}
+
+	TitleTxt.setFont(font);
+	TitleTxt.setCharacterSize(36);
+	TitleTxt.setFillColor(sf::Color::White);
+	TitleTxt.setPosition(sf::Vector2f(PIX_MPL * 8.5625, PIX_MPL * 0.375));
+	TitleTxt.setString(sf::String("Chess"));
+
+	CurrentTeamTxt.setFont(font);
+	CurrentTeamTxt.setCharacterSize(16);
+	CurrentTeamTxt.setFillColor(sf::Color::White);
+	CurrentTeamTxt.setPosition(sf::Vector2f(PIX_MPL * 8.25, PIX_MPL * 1.25));
+	CurrentTeamTxt.setString(sf::String("It is white's turn"));
+
+	CreditsTxt.setFont(font);
+	CreditsTxt.setCharacterSize(14);
+	CreditsTxt.setFillColor(sf::Color::White);
+	CreditsTxt.setPosition(sf::Vector2f(PIX_MPL * 8.0625, PIX_MPL * 6.625));
+	CreditsTxt.setString(sf::String("Programmed by:\n       Jeremy Smith\nUpdated:\n       September 24, 2017"));
+
+	StaleOrCheckmateTxt.setFont(font);
+	StaleOrCheckmateTxt.setCharacterSize(24);
+	StaleOrCheckmateTxt.setFillColor(sf::Color::White);
+	StaleOrCheckmateTxt.setPosition(sf::Vector2f(PIX_MPL * 8.375, PIX_MPL * 4));
+	StaleOrCheckmateTxt.setString(sf::String(""));
+
+	WinnerTxt.setFont(font);
+	WinnerTxt.setCharacterSize(18);
+	WinnerTxt.setFillColor(sf::Color::White);
+	WinnerTxt.setPosition(sf::Vector2f(PIX_MPL * 8.375, PIX_MPL * 5));
+	WinnerTxt.setString(sf::String(""));
+
+	ResetButton.setSize(ResetButtonSize);
+	ResetButton.setFillColor(sf::Color::Magenta);
+	ResetButton.setPosition(ResetButtonTopLeft);
+
+	ResetTxt.setFont(font);
+	ResetTxt.setCharacterSize(16);
+	ResetTxt.setFillColor(sf::Color::Black);
+	ResetTxt.setPosition(sf::Vector2f(ResetButtonTopLeft.x + ResetButtonSize.x / 10, \
+		ResetButtonTopLeft.y + ResetButtonSize.y / 4));
+	ResetTxt.setString(sf::String("Reset Game"));
+
+	PlayAgainButton.setSize(sf::Vector2f(0,0));
+	PlayAgainButton.setFillColor(sf::Color::Green);
+
+	PlayAgainTxt.setString(sf::String(""));
+
+	QuitButton.setSize(QuitButtonSize);
+	QuitButton.setFillColor(sf::Color::Red);
+	QuitButton.setPosition(QuitButtonTopLeft);
+
+	QuitTxt.setFont(font);
+	QuitTxt.setCharacterSize(12);
+	QuitTxt.setFillColor(sf::Color::Black);
+	QuitTxt.setPosition(sf::Vector2f(QuitButtonTopLeft.x + QuitButtonSize.x / 4, \
+		QuitButtonTopLeft.y + QuitButtonSize.y / 4));
+	QuitTxt.setString(sf::String("Quit"));
+
 	return;
 }
 
@@ -30,12 +92,119 @@ sf::Sprite* CGame::PassAlongPieceSprite(int file, int rank)
 	return ptrPieceSprite;
 }
 
+sf::Text* CGame::PassAlongTitleTxt()
+{
+	ptrTitleTxt = &TitleTxt;
+	return ptrTitleTxt;
+}
+
+sf::Text * CGame::PassAlongCurrentTeamTxt()
+{
+	ptrCurrentTeamTxt = &CurrentTeamTxt;
+	return ptrCurrentTeamTxt;
+}
+
+sf::Text* CGame::PassAlongCreditsTxt()
+{
+	ptrCreditsTxt = &CreditsTxt;
+	return ptrCreditsTxt;
+}
+
+sf::Text* CGame::PassAlongStaleOrCheckmateTxt()
+{
+	ptrStaleOrCheckmateTxt = &StaleOrCheckmateTxt;
+	return ptrStaleOrCheckmateTxt;
+}
+
+sf::Text* CGame::PassAlongWinnerTxt()
+{
+	ptrWinnerTxt = &WinnerTxt;
+	return ptrWinnerTxt;
+}
+
+sf::RectangleShape* CGame::PassAlongResetButton()
+{
+	ptrResetButton = &ResetButton;
+	return ptrResetButton;
+}
+
+sf::Text* CGame::PassAlongResetTxt()
+{
+	ptrResetTxt = &ResetTxt;
+	return ptrResetTxt;
+}
+
+sf::RectangleShape* CGame::PassAlongPlayAgainButton()
+{
+	ptrPlayAgainButton = &PlayAgainButton;
+	return ptrPlayAgainButton;
+}
+
+sf::Text* CGame::PassAlongPlayAgainTxt()
+{
+	ptrPlayAgainTxt = &PlayAgainTxt;
+	return ptrPlayAgainTxt;
+}
+
+sf::RectangleShape* CGame::PassAlongQuitButton()
+{
+	ptrQuitButton = &QuitButton;
+	return ptrQuitButton;
+}
+
+sf::Text* CGame::PassAlongQuitTxt()
+{
+	ptrQuitTxt = &QuitTxt;
+	return ptrQuitTxt;
+}
+
 void CGame::LeftClick(sf::Event event)
 {
-	std::pair<int, int> newClick = std::make_pair(static_cast<int>(floor(event.mouseButton.x / PIX_MPL)), \
-		7 - static_cast<int>(floor(event.mouseButton.y / PIX_MPL))); // get file & rank from x- and y-location of click
-	bool bOffBoard = bClickOffBoard(newClick); // leave the LeftClick function early, if click was off of board
-	if (bOffBoard) { return; }
+	// get location (in terms of pixels) of the new click -- modified to reflect file & rank after checking click positions
+	std::pair<int, int> newClick = std::make_pair(event.mouseButton.x, event.mouseButton.y);
+	
+	if (bClickOffBoard(newClick)) // leave the LeftClick function early, if click was off of board
+	{
+		if (bClickOnReset(newClick))
+		{
+			board.ResetBoard();
+			currentTeamColour = EColour::white;
+			CurrentTeamTxt.setString(sf::String("It is white's turn"));
+			StaleOrCheckmateTxt.setString(sf::String(""));
+			WinnerTxt.setString(sf::String(""));
+			PlayAgainButton.setSize(sf::Vector2f(0, 0));
+			PlayAgainTxt.setString(sf::String(""));
+		}
+		else if (bClickOnPlayAgain(newClick))
+		{
+			board.ResetBoard();
+			currentTeamColour = EColour::white;
+			CurrentTeamTxt.setString(sf::String("It is white's turn"));
+			StaleOrCheckmateTxt.setString(sf::String(""));
+			WinnerTxt.setString(sf::String(""));
+			PlayAgainButton.setSize(sf::Vector2f(0, 0));
+			PlayAgainTxt.setString(sf::String(""));
+		}
+		else if (bClickOnQuit(newClick))
+		{
+			
+		}
+		else // set colour of all spaces to white
+		{
+			for (int File = 0; File <= 7; File++)
+			{
+				for (int Rank = 0; Rank <= 7; Rank++)
+				{
+					board.highlightOff(std::make_pair(File, Rank), {});
+				}
+			}
+		}
+		return; // exit the LeftClick function early since the click was not on a piece
+	}
+	
+	// get file & rank from x- and y-location of click
+	newClick = std::make_pair(static_cast<int>(floor(newClick.first / PIX_MPL)), \
+		7 - static_cast<int>(floor(newClick.second / PIX_MPL)));
 
 	CPiece *oldPiece;
 	CPiece *newPiece;
@@ -157,21 +326,16 @@ void CGame::LeftClick(sf::Event event)
 
 		checkPawnPromotion();
 
-		switchTeam();
+		switchTeam(); //switches to the other team before checking checkmate/stalemate, so that currentTeamColour can be used
+
+		CheckIfStaleOrCheckmate();
 	}
 
 	// first click was NOT ON our team, second click was ON our team
 	else if ((oldPiece->GetColour() != currentTeamColour) && (newPiece->GetColour() == currentTeamColour))
 	{
 		DestList = ObtainValidDestinationsForAnyPiece(newPiece);
-
-		/*
-		ALSO, TO GO AT BOTTOM OF LEFT CLICK FUNCTION:
-		BlockCheckSpots = GetBlockCheckSpots(kingPosition);
-		CheckForCheckmate(kingPosition, BlockCheckSpots);
-		--^^[[if king has no valid destinations && for each piece_, GetDestListCheckingForPiece(piece_)[i_] != BlockCheckSpots[j_], then checkmate.]]
-		*/
-
+		
 		board.highlightOn(newPiece->GetPosition(), DestList);
 	}
 	
@@ -179,6 +343,7 @@ void CGame::LeftClick(sf::Event event)
 	else if ((oldPiece->GetColour() == currentTeamColour) && (newPiece->GetColour() != currentTeamColour))
 	{
 		board.highlightOff(oldPiece->GetPosition(), DestList);
+		
 		DestList = {};
 	}
 	
@@ -210,28 +375,50 @@ void CGame::LeftClick(sf::Event event)
 
 			board.highlightOn(newPiece->GetPosition(), DestList);
 		}
-
 	}
-	
 	oldClick = newClick; // newClick is set anew at the start of the function
+
 	return;
 }
 
 bool CGame::bClickOffBoard(std::pair<int, int> click)
 {
 	bool bClickOffBoard = false;
-	if (click.first < 0 || click.first > 7 || click.second < 0 || click.second > 7)
+	if (click.first < 0 || click.first > PIX_MPL * 8 || click.second < 0 || click.second > PIX_MPL * 8)
 	{
 		bClickOffBoard = true;
-		for (int File = 0; File <= 7; File++)
-		{
-			for (int Rank = 0; Rank <= 7; Rank++)
-			{
-				board.highlightOff(std::make_pair(File, Rank), {}); // set colour of all spaces to white
-			}
-		}
 	}
 	return bClickOffBoard;
+}
+
+bool CGame::bClickOnReset(std::pair<int, int> click)
+{
+	bool bClickOnReset = false;
+	if ((click.first > ResetButtonTopLeft.x) && (click.first < ResetButtonTopLeft.x + ResetButtonSize.x) && \
+		(click.second > ResetButtonTopLeft.y) && (click.second < ResetButtonTopLeft.y + ResetButtonSize.y))
+	{
+		bClickOnReset = true;
+	}
+	return bClickOnReset;
+}
+
+bool CGame::bClickOnPlayAgain(std::pair<int, int> click)
+{
+	bool bClickOnPlayAgain = false;
+	if ((click.first > PlayAgainButtonTopLeft.x) && (click.first < PlayAgainButtonTopLeft.x + PlayAgainButtonSize.x) && \
+		(click.second > PlayAgainButtonTopLeft.y) && (click.second < PlayAgainButtonTopLeft.y + PlayAgainButtonSize.y))
+	{
+		bClickOnPlayAgain = true;
+	}
+	return bClickOnPlayAgain;
+}
+
+bool CGame::bClickOnQuit(std::pair<int, int> click)
+{
+	bool bClickOnQuit = false;
+
+
+	return bClickOnQuit;
 }
 
 /*
@@ -652,7 +839,6 @@ std::vector<std::pair<int, int>> CGame::GetDestListCheckingForPin(CPiece* piece)
 		{
 			pinDestList = {}; // there is a pin, and the pinned piece cannot move
 		}
-
 	}
 	else
 	{
@@ -757,11 +943,154 @@ std::vector<std::pair<int, int>> CGame::ObtainValidDestinationsForAnyPiece(CPiec
 	return destlist;
 }
 
+void CGame::CheckIfStaleOrCheckmate()
+{
+	// check if the team that didn't just move has been checkmated, or if there is stalemate, or neither.
+	bool bIsCheckmate = false;
+	bool bIsStalemate = false;
+
+	// create the king object (we will check if it has any destinations or not)
+	CKing tempObj1(currentTeamColour);
+	CPiece *otherKingPiece = &tempObj1;
+
+	otherKingPiece->SetPosition(findKingPosition(currentTeamColour).first, findKingPosition(currentTeamColour).second);
+	otherKingPiece->calcDestinations(&board);
+
+	int numOtherKingDests = ObtainValidDestinationsForAnyPiece(otherKingPiece).size();
+	if (numOtherKingDests == 0)
+	{
+		// the piece that is used when looping through the board
+		CPiece *loopPiece;
+
+		// a running total of the number of destinations for the team
+		int NumDestForTeam = 0;
+
+		// king has no destinations - could be checkmate, stalemate, or neither.
+		for (int file = 0; file <= 7; file++)
+		{
+			for (int rank = 0; rank <= 7; rank++)
+			{
+				if (board.getTeamColour(file, rank) == currentTeamColour)
+				{
+					// we are investigating a piece of the other team at (file, rank) to see if it has moves
+
+					// assign loopPiece to an object of correct type for the piece
+					switch (board.getPieceType(file, rank))
+					{
+					case EPiece::pawn:
+					{
+						CPawn tempObj2(currentTeamColour);
+						loopPiece = &tempObj2;
+						break;
+					}
+					case EPiece::rook:
+					{
+						CRook tempObj2(currentTeamColour);
+						loopPiece = &tempObj2;
+						break;
+					}
+					case EPiece::knight:
+					{
+						CKnight tempObj2(currentTeamColour);
+						loopPiece = &tempObj2;
+						break;
+					}
+					case EPiece::bishop:
+					{
+						CBishop tempObj2(currentTeamColour);
+						loopPiece = &tempObj2;
+						break;
+					}
+					case EPiece::queen:
+					{
+						CQueen tempObj2(currentTeamColour);
+						loopPiece = &tempObj2;
+						break;
+					}
+					case EPiece::king:
+					{
+						CKing tempObj2(currentTeamColour);
+						loopPiece = &tempObj2;
+						break;
+					}
+					default:
+						CPiece tempObj2;
+						loopPiece = &tempObj2;
+						break;
+					}
+
+					loopPiece->SetPosition(file, rank);
+					loopPiece->calcDestinations(&board);
+					NumDestForTeam = NumDestForTeam + ObtainValidDestinationsForAnyPiece(loopPiece).size();
+
+					if (NumDestForTeam != 0)
+					{	// at least one piece has a destination, so the game is not checkmate or stalemate
+						bIsCheckmate = false;
+						bIsStalemate = false;
+						// break out of the "rank" for loop if a destination has been found
+						break;
+					}
+				} // end of if
+			} // end of "rank" for
+
+			if (NumDestForTeam != 0)
+			{	// at least one piece has a destination, so the game is not checkmate or stalemate
+				// break out of the "file" for loop if a destination has been found
+				break;
+			}
+
+		} // end of "file" for
+
+		if (NumDestForTeam == 0) // the other team is either checkmated or the game is stalemated
+		{
+			// if the other team is in check, it is checkmate
+			if (bCheckIfCheck(otherKingPiece->GetPosition()))
+			{
+				bIsCheckmate = true;
+				StaleOrCheckmateTxt.setString("Checkmate");
+
+				std::string WinnerString;
+				if (currentTeamColour == EColour::white) { WinnerString = " Black"; }
+				else { WinnerString = " White"; }
+
+				WinnerTxt.setString(WinnerString + " wins!");
+			}
+
+			// the other team is not in check but cannot move, so the game is a stalemate
+			else
+			{
+				bIsStalemate = true;
+				StaleOrCheckmateTxt.setString("Stalemate");
+			}
+
+			PlayAgainButton.setSize(PlayAgainButtonSize);
+			PlayAgainButton.setFillColor(sf::Color::Green);
+			PlayAgainButton.setPosition(PlayAgainButtonTopLeft);
+
+			PlayAgainTxt.setFont(font);
+			PlayAgainTxt.setCharacterSize(12);
+			PlayAgainTxt.setFillColor(sf::Color::Black);
+			PlayAgainTxt.setPosition(sf::Vector2f(PlayAgainButtonTopLeft.x + PlayAgainButtonSize.x / 16, \
+				PlayAgainButtonTopLeft.y + PlayAgainButtonSize.y / 4));
+			PlayAgainTxt.setString(sf::String("Play Again?"));
+
+		}
+	}
+}
+
 // switches the team whose turn it is to move
 void CGame::switchTeam()
 {
-	if (currentTeamColour == EColour::white) { currentTeamColour = EColour::black; }
-	else { currentTeamColour = EColour::white; }
+	if (currentTeamColour == EColour::white)
+	{
+		currentTeamColour = EColour::black;
+		CurrentTeamTxt.setString(sf::String("It is black's turn"));
+	}
+	else
+	{
+		currentTeamColour = EColour::white;
+		CurrentTeamTxt.setString(sf::String("It is white's turn"));
+	}
 	return;
 }
 

@@ -4,7 +4,6 @@ CPawn::CPawn(EColour colour)
 {
 	SetColour(colour);
 	SetPieceType(EPiece::pawn);
-	SetRangeType(ERange::fixed);
 }
 
 void CPawn::calcDestinations(CBoard* board)
