@@ -73,6 +73,8 @@ private:
 	sf::Vector2f QuitButtonTopLeft = { PIX_MPL * 9.75, PIX_MPL * 6 };
 	sf::Vector2f QuitButtonSize = { PIX_MPL * 1, PIX_MPL * 0.5 };
 
+	void ResetGame();
+
 	bool bClickOffBoard(std::pair<int, int>);
 	bool bClickOnReset(std::pair<int, int>);
 	bool bClickOnPlayAgain(std::pair<int, int>);

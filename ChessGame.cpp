@@ -34,7 +34,7 @@ CGame::CGame()
 	CreditsTxt.setCharacterSize(14);
 	CreditsTxt.setFillColor(sf::Color::White);
 	CreditsTxt.setPosition(sf::Vector2f(PIX_MPL * 8.0625, PIX_MPL * 6.625));
-	CreditsTxt.setString(sf::String("Programmed by:\n       Jeremy Smith\nUpdated:\n       September 24, 2017"));
+	CreditsTxt.setString(sf::String("Programmed by:\n       Jeremy Smith\nUpdated:\n       September 25, 2017"));
 
 	StaleOrCheckmateTxt.setFont(font);
 	StaleOrCheckmateTxt.setCharacterSize(24);
@@ -61,19 +61,25 @@ CGame::CGame()
 
 	PlayAgainButton.setSize(sf::Vector2f(0,0));
 	PlayAgainButton.setFillColor(sf::Color::Green);
+	PlayAgainButton.setPosition(PlayAgainButtonTopLeft);
 
+	PlayAgainTxt.setFont(font);
+	PlayAgainTxt.setCharacterSize(12);
+	PlayAgainTxt.setFillColor(sf::Color::Black);
+	PlayAgainTxt.setPosition(sf::Vector2f(PlayAgainButtonTopLeft.x + PlayAgainButtonSize.x / 4, \
+		PlayAgainButtonTopLeft.y + PlayAgainButtonSize.y / 4));
 	PlayAgainTxt.setString(sf::String(""));
 
-	QuitButton.setSize(QuitButtonSize);
+	QuitButton.setSize(sf::Vector2f(0,0));
 	QuitButton.setFillColor(sf::Color::Red);
 	QuitButton.setPosition(QuitButtonTopLeft);
 
 	QuitTxt.setFont(font);
 	QuitTxt.setCharacterSize(12);
 	QuitTxt.setFillColor(sf::Color::Black);
-	QuitTxt.setPosition(sf::Vector2f(QuitButtonTopLeft.x + QuitButtonSize.x / 4, \
+	QuitTxt.setPosition(sf::Vector2f(QuitButtonTopLeft.x + QuitButtonSize.x / 8, \
 		QuitButtonTopLeft.y + QuitButtonSize.y / 4));
-	QuitTxt.setString(sf::String("Quit"));
+	QuitTxt.setString(sf::String(""));
 
 	return;
 }
@@ -167,27 +173,29 @@ void CGame::LeftClick(sf::Event event)
 	{
 		if (bClickOnReset(newClick))
 		{
-			board.ResetBoard();
-			currentTeamColour = EColour::white;
-			CurrentTeamTxt.setString(sf::String("It is white's turn"));
-			StaleOrCheckmateTxt.setString(sf::String(""));
-			WinnerTxt.setString(sf::String(""));
-			PlayAgainButton.setSize(sf::Vector2f(0, 0));
-			PlayAgainTxt.setString(sf::String(""));
+			StaleOrCheckmateTxt.setString(sf::String("Are you\n sure?"));
+
+			PlayAgainButton.setSize(PlayAgainButtonSize);
+			PlayAgainTxt.setString(sf::String("  Yes"));
+			PlayAgainTxt.setFillColor(sf::Color::Black);
+
+			QuitButton.setSize(QuitButtonSize);
+			QuitTxt.setString(sf::String("Cancel"));
+			QuitTxt.setFillColor(sf::Color::Black);
 		}
 		else if (bClickOnPlayAgain(newClick))
 		{
-			board.ResetBoard();
-			currentTeamColour = EColour::white;
-			CurrentTeamTxt.setString(sf::String("It is white's turn"));
-			StaleOrCheckmateTxt.setString(sf::String(""));
-			WinnerTxt.setString(sf::String(""));
-			PlayAgainButton.setSize(sf::Vector2f(0, 0));
-			PlayAgainTxt.setString(sf::String(""));
+			ResetGame();
 		}
 		else if (bClickOnQuit(newClick))
 		{
-			
+			StaleOrCheckmateTxt.setString(sf::String(""));
+
+			PlayAgainButton.setSize(sf::Vector2f(0, 0));
+			PlayAgainTxt.setString(sf::String(""));
+
+			QuitButton.setSize(sf::Vector2f(0, 0));
+			QuitTxt.setString(sf::String(""));
 		}
 		else // set colour of all spaces to white
 		{
@@ -381,6 +389,27 @@ void CGame::LeftClick(sf::Event event)
 	return;
 }
 
+void CGame::ResetGame()
+{
+	board.ResetBoard();
+	currentTeamColour = EColour::white;
+	CurrentTeamTxt.setString(sf::String("It is white's turn"));
+	StaleOrCheckmateTxt.setString(sf::String(""));
+	WinnerTxt.setString(sf::String(""));
+	PlayAgainButton.setSize(sf::Vector2f(0, 0));
+	PlayAgainTxt.setString(sf::String(""));
+	QuitButton.setSize(sf::Vector2f(0, 0));
+	QuitTxt.setString(sf::String(""));
+
+	for (int File = 0; File <= 7; File++)
+	{
+		for (int Rank = 0; Rank <= 7; Rank++)
+		{
+			board.highlightOff(std::make_pair(File, Rank), {});
+		}
+	}
+}
+
 bool CGame::bClickOffBoard(std::pair<int, int> click)
 {
 	bool bClickOffBoard = false;
@@ -394,8 +423,8 @@ bool CGame::bClickOffBoard(std::pair<int, int> click)
 bool CGame::bClickOnReset(std::pair<int, int> click)
 {
 	bool bClickOnReset = false;
-	if ((click.first > ResetButtonTopLeft.x) && (click.first < ResetButtonTopLeft.x + ResetButtonSize.x) && \
-		(click.second > ResetButtonTopLeft.y) && (click.second < ResetButtonTopLeft.y + ResetButtonSize.y))
+	if ((click.first > ResetButtonTopLeft.x) && (click.first < ResetButtonTopLeft.x + ResetButton.getSize().x) && \
+		(click.second > ResetButtonTopLeft.y) && (click.second < ResetButtonTopLeft.y + ResetButton.getSize().y))
 	{
 		bClickOnReset = true;
 	}
@@ -405,8 +434,8 @@ bool CGame::bClickOnReset(std::pair<int, int> click)
 bool CGame::bClickOnPlayAgain(std::pair<int, int> click)
 {
 	bool bClickOnPlayAgain = false;
-	if ((click.first > PlayAgainButtonTopLeft.x) && (click.first < PlayAgainButtonTopLeft.x + PlayAgainButtonSize.x) && \
-		(click.second > PlayAgainButtonTopLeft.y) && (click.second < PlayAgainButtonTopLeft.y + PlayAgainButtonSize.y))
+	if ((click.first > PlayAgainButtonTopLeft.x) && (click.first < PlayAgainButtonTopLeft.x + PlayAgainButton.getSize().x) && \
+		(click.second > PlayAgainButtonTopLeft.y) && (click.second < PlayAgainButtonTopLeft.y + PlayAgainButton.getSize().y))
 	{
 		bClickOnPlayAgain = true;
 	}
@@ -416,27 +445,13 @@ bool CGame::bClickOnPlayAgain(std::pair<int, int> click)
 bool CGame::bClickOnQuit(std::pair<int, int> click)
 {
 	bool bClickOnQuit = false;
-
-
+	if ((click.first > QuitButtonTopLeft.x) && (click.first < QuitButtonTopLeft.x + QuitButton.getSize().x) && \
+		(click.second > QuitButtonTopLeft.y) && (click.second < QuitButtonTopLeft.y + QuitButton.getSize().y))
+	{
+		bClickOnQuit = true;
+	}
 	return bClickOnQuit;
 }
-
-/*
-bool CGame::bIsDestination(std::pair<int, int> click)
-{
-	bool IsDestination = false;
-	// returns true if the inputted position (click) matches any of the destinations in the private property (DestList).
-	for (unsigned int dest = 0; dest < DestList.size(); dest++)
-	{
-		if (click.first == DestList[dest].first && click.second == DestList[dest].second)
-		{
-			IsDestination = true;
-			break;
-		}
-	}
-	return IsDestination;
-}
-*/
 
 std::pair<int, int> CGame::findKingPosition(EColour colour)
 {
@@ -532,10 +547,18 @@ bool CGame::bCheckIfCheck(std::pair<int, int> kingPos)
 					(board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) != EPiece::rook) && \
 					(board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) != EPiece::bishop))
 				{
-					// piece hit is not a queen, nor a rook, nor a bishop, so no check is applied from this direction
+					// piece hit is not a queen, nor a rook, nor a bishop, so no check is (or would be) applied from this direction
 					break; // break out of this direction search
 				}
-			
+				else if (((board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == EPiece::rook) && \
+					(abs(dir[i_].first) + abs(dir[i_].second) != 1)) \
+					|| \
+					((board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == EPiece::bishop) && \
+					(abs(dir[i_].first) + abs(dir[i_].second) != 2)))
+				{
+					// piece hit is a rook along a diagonal or a bishop along an orthogonal, so no check is (or would be) applied from this direction
+					break; // break out of this direction search
+				}
 				else if ((board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == EPiece::queen) \
 					|| \
 					((board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == EPiece::rook) && \
@@ -544,7 +567,7 @@ bool CGame::bCheckIfCheck(std::pair<int, int> kingPos)
 					((board.getPieceType(newPos.first + dir[i_].first, newPos.second + dir[i_].second) == EPiece::bishop) && \
 					(abs(dir[i_].first) + abs(dir[i_].second) == 2)))
 				{
-					// piece hit is a queen, or a rook on an orthogonal, or a bishop on a diagonal, so the king is in check
+					// piece hit is a queen, or a rook on an orthogonal, or a bishop on a diagonal, so the king is (or would be) in check
 					bIsCheck = true;
 					return bIsCheck;
 				}
