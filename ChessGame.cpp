@@ -34,7 +34,7 @@ CGame::CGame()
 	CreditsTxt.setCharacterSize(14);
 	CreditsTxt.setFillColor(sf::Color::White);
 	CreditsTxt.setPosition(sf::Vector2f(PIX_MPL * 8.0625, PIX_MPL * 6.625));
-	CreditsTxt.setString(sf::String("Programmed by:\n       Jeremy Smith\nUpdated:\n       September 25, 2017"));
+	CreditsTxt.setString(sf::String("Programmed by:\n       Jeremy Smith\nUpdated:\n       September 28, 2017"));
 
 	StaleOrCheckmateTxt.setFont(font);
 	StaleOrCheckmateTxt.setCharacterSize(24);
@@ -80,6 +80,56 @@ CGame::CGame()
 	CancelTxt.setPosition(sf::Vector2f(CancelButtonTopLeft.x + CancelButtonSize.x / 8, \
 		CancelButtonTopLeft.y + CancelButtonSize.y / 4));
 	CancelTxt.setString(sf::String(""));
+
+	PawnPromotionTxt.setFont(font);
+	PawnPromotionTxt.setCharacterSize(20);
+	PawnPromotionTxt.setFillColor(sf::Color::White);
+	PawnPromotionTxt.setPosition(sf::Vector2f(PIX_MPL * 8.375, PIX_MPL * 3.375));
+	PawnPromotionTxt.setString(sf::String(""));
+
+	PPQueenButton.setSize(sf::Vector2f(0, 0));
+	PPQueenButton.setFillColor(sf::Color::Green);
+	PPQueenButton.setPosition(PPQueenButtonTopLeft);
+
+	PPQueenTxt.setFont(font);
+	PPQueenTxt.setCharacterSize(12);
+	PPQueenTxt.setFillColor(sf::Color::Black);
+	PPQueenTxt.setPosition(sf::Vector2f(PPQueenButtonTopLeft.x + PPButtonSize.x / 8, \
+		PPQueenButtonTopLeft.y + PPButtonSize.y / 4));
+	PPQueenTxt.setString(sf::String(""));
+
+	PPRookButton.setSize(sf::Vector2f(0, 0));
+	PPRookButton.setFillColor(sf::Color::Green);
+	PPRookButton.setPosition(PPRookButtonTopLeft);
+
+	PPRookTxt.setFont(font);
+	PPRookTxt.setCharacterSize(12);
+	PPRookTxt.setFillColor(sf::Color::Black);
+	PPRookTxt.setPosition(sf::Vector2f(PPRookButtonTopLeft.x + PPButtonSize.x / 8, \
+		PPRookButtonTopLeft.y + PPButtonSize.y / 4));
+	PPRookTxt.setString(sf::String(""));
+
+	PPBishopButton.setSize(sf::Vector2f(0, 0));
+	PPBishopButton.setFillColor(sf::Color::Green);
+	PPBishopButton.setPosition(PPBishopButtonTopLeft);
+
+	PPBishopTxt.setFont(font);
+	PPBishopTxt.setCharacterSize(12);
+	PPBishopTxt.setFillColor(sf::Color::Black);
+	PPBishopTxt.setPosition(sf::Vector2f(PPBishopButtonTopLeft.x + PPButtonSize.x / 8, \
+		PPBishopButtonTopLeft.y + PPButtonSize.y / 4));
+	PPBishopTxt.setString(sf::String(""));
+
+	PPKnightButton.setSize(sf::Vector2f(0, 0));
+	PPKnightButton.setFillColor(sf::Color::Green);
+	PPKnightButton.setPosition(PPKnightButtonTopLeft);
+
+	PPKnightTxt.setFont(font);
+	PPKnightTxt.setCharacterSize(12);
+	PPKnightTxt.setFillColor(sf::Color::Black);
+	PPKnightTxt.setPosition(sf::Vector2f(PPKnightButtonTopLeft.x + PPButtonSize.x / 8, \
+		PPKnightButtonTopLeft.y + PPButtonSize.y / 4));
+	PPKnightTxt.setString(sf::String(""));
 
 	return;
 }
@@ -163,6 +213,62 @@ sf::Text* CGame::PassAlongCancelTxt()
 	ptrCancelTxt = &CancelTxt;
 	return ptrCancelTxt;
 }
+
+
+sf::Text * CGame::PassAlongPawnPromotionTxt()
+{
+	ptrPawnPromotionTxt = &PawnPromotionTxt;
+	return ptrPawnPromotionTxt;
+}
+
+sf::RectangleShape * CGame::PassAlongPPQueenButton()
+{
+	ptrPPQueenButton = &PPQueenButton;
+	return ptrPPQueenButton;
+}
+
+sf::Text * CGame::PassAlongPPQueenTxt()
+{
+	ptrPPQueenTxt = &PPQueenTxt;
+	return ptrPPQueenTxt;
+}
+
+sf::RectangleShape * CGame::PassAlongPPRookButton()
+{
+	ptrPPRookButton = &PPRookButton;
+	return ptrPPRookButton;
+}
+
+sf::Text * CGame::PassAlongPPRookTxt()
+{
+	ptrPPRookTxt = &PPRookTxt;
+	return ptrPPRookTxt;
+}
+
+sf::RectangleShape * CGame::PassAlongPPBishopButton()
+{
+	ptrPPBishopButton = &PPBishopButton;
+	return ptrPPBishopButton;
+}
+
+sf::Text * CGame::PassAlongPPBishopTxt()
+{
+	ptrPPBishopTxt = &PPBishopTxt;
+	return ptrPPBishopTxt;
+}
+
+sf::RectangleShape * CGame::PassAlongPPKnightButton()
+{
+	ptrPPKnightButton = &PPKnightButton;
+	return ptrPPKnightButton;
+}
+
+sf::Text * CGame::PassAlongPPKnightTxt()
+{
+	ptrPPKnightTxt = &PPKnightTxt;
+	return ptrPPKnightTxt;
+}
+
 
 void CGame::LeftClick(sf::Event event)
 {
@@ -1024,15 +1130,12 @@ bool CGame::bCanCastleSide(int side)
 		if (board.getPieceType(kingPosition.first + dir, kingPosition.second) == EPiece::empty && \
 			board.getPieceType(kingPosition.first + dir * 2, kingPosition.second) == EPiece::empty)
 		{
-			// castling is automatically not an option if the king is in check, so we only need to check for check in the two spaces
-			// ^^ (refer to the "else" of the "else" in ObtainValidDestinationsForAnyPiece)
-
-			/////////vvvvCOULD UNCOMMENT
 			
+			/*
 			// temporarily set the king's position to be empty when checking for check in castling spaces
 			board.setPieceType(kingPosition.first, kingPosition.second, EPiece::empty);
 			board.setTeamColour(kingPosition.first, kingPosition.second, EColour::empty);
-			
+			*/
 
 
 			/*
@@ -1041,44 +1144,45 @@ bool CGame::bCanCastleSide(int side)
 			board.setTeamColour(kingPosition.first + dir, kingPosition.second, currentTeamColour);
 			*/
 
-
-			if (!bCheckIfCheck(std::make_pair(kingPosition.first + dir, kingPosition.second), currentTeamColour)) // notice the !
+			if (!bCheckIfCheck(std::make_pair(kingPosition.first, kingPosition.second), currentTeamColour)) // notice the !
 			{
-				// the king would not be in check in the space it must cross - now check the destination space
-				
+				// the king is not in check - now check the space it must cross
 
-				/*
-				// reset the space the king must cross to be empty
-				board.setPieceType(kingPosition.first + dir, kingPosition.second, EPiece::empty);
-				board.setTeamColour(kingPosition.first + dir, kingPosition.second, EColour::empty);
-				*/
-
-
-				/*
-				// temporarily move king to its castling destination space to check for check
-				board.setPieceType(kingPosition.first + dir * 2, kingPosition.second, EPiece::king);
-				board.setTeamColour(kingPosition.first + dir * 2, kingPosition.second, currentTeamColour);
-				*/
-
-
-				
-				if (!bCheckIfCheck(std::make_pair(kingPosition.first + dir * 2, kingPosition.second), currentTeamColour)) // notice the !
+				if (!bCheckIfCheck(std::make_pair(kingPosition.first + dir, kingPosition.second), currentTeamColour)) // notice the !
 				{
-					// the king would not be in check in its destination for castling; this castling is valid
-					bCanCastle = true;
+					// the king would not be in check in the space it must cross - now check the destination space
+
+
+					/*
+					// reset the space the king must cross to be empty
+					board.setPieceType(kingPosition.first + dir, kingPosition.second, EPiece::empty);
+					board.setTeamColour(kingPosition.first + dir, kingPosition.second, EColour::empty);
+					*/
+
+
+					/*
+					// temporarily move king to its castling destination space to check for check
+					board.setPieceType(kingPosition.first + dir * 2, kingPosition.second, EPiece::king);
+					board.setTeamColour(kingPosition.first + dir * 2, kingPosition.second, currentTeamColour);
+					*/
+
+
+
+					if (!bCheckIfCheck(std::make_pair(kingPosition.first + dir * 2, kingPosition.second), currentTeamColour)) // notice the !
+					{
+						// the king would not be in check in its destination for castling; this castling is valid
+						bCanCastle = true;
+					}
 				}
+
+
+				/*
+				// reset the castling destination space to be empty
+				board.setPieceType(kingPosition.first + dir * 2, kingPosition.second, EPiece::empty);
+				board.setTeamColour(kingPosition.first + dir * 2, kingPosition.second, EColour::empty);
+				*/
 			}
-			
-
-			/*
-			// reset the castling destination space to be empty
-			board.setPieceType(kingPosition.first + dir * 2, kingPosition.second, EPiece::empty);
-			board.setTeamColour(kingPosition.first + dir * 2, kingPosition.second, EColour::empty);
-			*/
-
 		}
-
-		////////vvvvCOULD UNCOMMENT
 
 		// after checking, put the king back in its original position.
 		board.setPieceType(kingPosition.first, kingPosition.second, EPiece::king);
@@ -1281,7 +1385,18 @@ void CGame::checkPawnPromotion()
 	{
 		if (board.getPieceType(file, lastRank) == EPiece::pawn)
 		{
-			// TODO: Add the buttons to select either a queen, rook, bishop or knight
+			// TODO: Add the functionality to receive clicks in either the queen, rook, bishop or knight button
+
+			PawnPromotionTxt.setString(sf::String("Pawn\n  Promotion! \nSelect a piece."));
+
+			PPQueenButton.setSize(PPButtonSize);
+			PPQueenTxt.setString("Queen");
+			PPRookButton.setSize(PPButtonSize);
+			PPRookTxt.setString("Rook");
+			PPBishopButton.setSize(PPButtonSize);
+			PPBishopTxt.setString("Bishop");
+			PPKnightButton.setSize(PPButtonSize);
+			PPKnightTxt.setString("Knight");
 
 			board.setPieceType(file, lastRank, EPiece::queen);
 			board.resetPieceSprite(file, lastRank);

@@ -64,8 +64,18 @@ void PlayGame()
 					window.draw(*Game.PassAlongResetTxt());
 					window.draw(*Game.PassAlongPlayAgainButton());
 					window.draw(*Game.PassAlongPlayAgainTxt());
-					window.draw(*Game.PassAlongQuitButton());
-					window.draw(*Game.PassAlongQuitTxt());
+					window.draw(*Game.PassAlongCancelButton());
+					window.draw(*Game.PassAlongCancelTxt());
+
+					window.draw(*Game.PassAlongPawnPromotionTxt());
+					window.draw(*Game.PassAlongPPQueenButton());
+					window.draw(*Game.PassAlongPPQueenTxt());
+					window.draw(*Game.PassAlongPPRookButton());
+					window.draw(*Game.PassAlongPPRookTxt());
+					window.draw(*Game.PassAlongPPBishopButton());
+					window.draw(*Game.PassAlongPPBishopTxt());
+					window.draw(*Game.PassAlongPPKnightButton());
+					window.draw(*Game.PassAlongPPKnightTxt());
 				}
 			}
 

@@ -8,6 +8,7 @@ public:
 
 	sf::Sprite* PassAlongPieceSprite(int, int);
 	sf::Sprite* PassAlongBoardSprite(int, int);
+
 	sf::Text* PassAlongTitleTxt();
 	sf::Text* PassAlongCurrentTeamTxt();
 	sf::Text* PassAlongCreditsTxt();
@@ -19,6 +20,16 @@ public:
 	sf::Text* PassAlongPlayAgainTxt();
 	sf::RectangleShape* PassAlongCancelButton();
 	sf::Text* PassAlongCancelTxt();
+
+	sf::Text* PassAlongPawnPromotionTxt();
+	sf::RectangleShape* PassAlongPPQueenButton();
+	sf::Text* PassAlongPPQueenTxt();
+	sf::RectangleShape* PassAlongPPRookButton();
+	sf::Text* PassAlongPPRookTxt();
+	sf::RectangleShape* PassAlongPPBishopButton();
+	sf::Text* PassAlongPPBishopTxt();
+	sf::RectangleShape* PassAlongPPKnightButton();
+	sf::Text* PassAlongPPKnightTxt();
 
 	void LeftClick(sf::Event);
 
@@ -39,6 +50,16 @@ private:
 	sf::Text PlayAgainTxt;
 	sf::RectangleShape CancelButton;
 	sf::Text CancelTxt;
+	// Pawn promotion GUI items
+	sf::Text PawnPromotionTxt;
+	sf::RectangleShape PPQueenButton;
+	sf::Text PPQueenTxt;
+	sf::RectangleShape PPRookButton;
+	sf::Text PPRookTxt;
+	sf::RectangleShape PPBishopButton;
+	sf::Text PPBishopTxt;
+	sf::RectangleShape PPKnightButton;
+	sf::Text PPKnightTxt;
 
 	sf::Sprite* ptrPieceSprite;
 	sf::Sprite* ptrBoardTileSprite;
@@ -53,6 +74,16 @@ private:
 	sf::Text* ptrPlayAgainTxt;
 	sf::RectangleShape* ptrCancelButton;
 	sf::Text* ptrCancelTxt;
+	// Pawn Promotion pointers for GUI
+	sf::Text* ptrPawnPromotionTxt;
+	sf::RectangleShape* ptrPPQueenButton;
+	sf::Text* ptrPPQueenTxt;
+	sf::RectangleShape* ptrPPRookButton;
+	sf::Text* ptrPPRookTxt;
+	sf::RectangleShape* ptrPPBishopButton;
+	sf::Text* ptrPPBishopTxt;
+	sf::RectangleShape* ptrPPKnightButton;
+	sf::Text* ptrPPKnightTxt;
 
 	EColour currentTeamColour = EColour::white;
 
@@ -77,6 +108,12 @@ private:
 
 	sf::Vector2f CancelButtonTopLeft = { PIX_MPL * 9.75, PIX_MPL * 6 };
 	sf::Vector2f CancelButtonSize = { PIX_MPL * 1, PIX_MPL * 0.5 };
+
+	sf::Vector2f PPQueenButtonTopLeft = { PIX_MPL * 8.375, PIX_MPL * 5 };
+	sf::Vector2f PPRookButtonTopLeft = { PIX_MPL * 9.625, PIX_MPL * 5 };
+	sf::Vector2f PPBishopButtonTopLeft = { PIX_MPL * 8.375, PIX_MPL * 5.75 };
+	sf::Vector2f PPKnightButtonTopLeft = { PIX_MPL * 9.625, PIX_MPL * 5.75 };
+	sf::Vector2f PPButtonSize = { PIX_MPL * 1, PIX_MPL * 0.5 };
 
 	void ResetGame();
 
