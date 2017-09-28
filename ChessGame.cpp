@@ -70,16 +70,16 @@ CGame::CGame()
 		PlayAgainButtonTopLeft.y + PlayAgainButtonSize.y / 4));
 	PlayAgainTxt.setString(sf::String(""));
 
-	QuitButton.setSize(sf::Vector2f(0,0));
-	QuitButton.setFillColor(sf::Color::Red);
-	QuitButton.setPosition(QuitButtonTopLeft);
+	CancelButton.setSize(sf::Vector2f(0,0));
+	CancelButton.setFillColor(sf::Color::Red);
+	CancelButton.setPosition(CancelButtonTopLeft);
 
-	QuitTxt.setFont(font);
-	QuitTxt.setCharacterSize(12);
-	QuitTxt.setFillColor(sf::Color::Black);
-	QuitTxt.setPosition(sf::Vector2f(QuitButtonTopLeft.x + QuitButtonSize.x / 8, \
-		QuitButtonTopLeft.y + QuitButtonSize.y / 4));
-	QuitTxt.setString(sf::String(""));
+	CancelTxt.setFont(font);
+	CancelTxt.setCharacterSize(12);
+	CancelTxt.setFillColor(sf::Color::Black);
+	CancelTxt.setPosition(sf::Vector2f(CancelButtonTopLeft.x + CancelButtonSize.x / 8, \
+		CancelButtonTopLeft.y + CancelButtonSize.y / 4));
+	CancelTxt.setString(sf::String(""));
 
 	return;
 }
@@ -152,16 +152,16 @@ sf::Text* CGame::PassAlongPlayAgainTxt()
 	return ptrPlayAgainTxt;
 }
 
-sf::RectangleShape* CGame::PassAlongQuitButton()
+sf::RectangleShape* CGame::PassAlongCancelButton()
 {
-	ptrQuitButton = &QuitButton;
-	return ptrQuitButton;
+	ptrCancelButton = &CancelButton;
+	return ptrCancelButton;
 }
 
-sf::Text* CGame::PassAlongQuitTxt()
+sf::Text* CGame::PassAlongCancelTxt()
 {
-	ptrQuitTxt = &QuitTxt;
-	return ptrQuitTxt;
+	ptrCancelTxt = &CancelTxt;
+	return ptrCancelTxt;
 }
 
 void CGame::LeftClick(sf::Event event)
@@ -176,26 +176,26 @@ void CGame::LeftClick(sf::Event event)
 			StaleOrCheckmateTxt.setString(sf::String("Are you\n sure?"));
 
 			PlayAgainButton.setSize(PlayAgainButtonSize);
-			PlayAgainTxt.setString(sf::String("  Yes"));
+			PlayAgainTxt.setString(sf::String("   Yes"));
 			PlayAgainTxt.setFillColor(sf::Color::Black);
 
-			QuitButton.setSize(QuitButtonSize);
-			QuitTxt.setString(sf::String("Cancel"));
-			QuitTxt.setFillColor(sf::Color::Black);
+			CancelButton.setSize(CancelButtonSize);
+			CancelTxt.setString(sf::String("Cancel"));
+			CancelTxt.setFillColor(sf::Color::Black);
 		}
 		else if (bClickOnPlayAgain(newClick))
 		{
 			ResetGame();
 		}
-		else if (bClickOnQuit(newClick))
+		else if (bClickOnCancel(newClick))
 		{
 			StaleOrCheckmateTxt.setString(sf::String(""));
 
 			PlayAgainButton.setSize(sf::Vector2f(0, 0));
 			PlayAgainTxt.setString(sf::String(""));
 
-			QuitButton.setSize(sf::Vector2f(0, 0));
-			QuitTxt.setString(sf::String(""));
+			CancelButton.setSize(sf::Vector2f(0, 0));
+			CancelTxt.setString(sf::String(""));
 		}
 		else // set colour of all spaces to white
 		{
@@ -326,13 +326,15 @@ void CGame::LeftClick(sf::Event event)
 
 	if (bIsDestination) // clicked on a valid destination, based on DestList
 	{
-		board.highlightOff(oldPiece->GetPosition(), oldPiece->GetDestinations());
+		board.highlightOff(oldPiece->GetPosition(), DestList);
 
 		board.movePiece(oldPiece->GetPosition(), newPiece->GetPosition());
 
 		DestList = {};
 
 		checkPawnPromotion();
+
+		eliminateCastlingOptions(oldPiece->GetPieceType(), oldPiece->GetPosition());
 
 		switchTeam(); //switches to the other team before checking checkmate/stalemate, so that currentTeamColour can be used
 
@@ -343,6 +345,17 @@ void CGame::LeftClick(sf::Event event)
 	else if ((oldPiece->GetColour() != currentTeamColour) && (newPiece->GetColour() == currentTeamColour))
 	{
 		DestList = ObtainValidDestinationsForAnyPiece(newPiece);
+		
+		// possibly append king-side castling to the list of destinations for the king
+		if (newPiece->GetPieceType() == EPiece::king && bCanCastleSide(0))
+		{
+			DestList.push_back(std::make_pair(newPiece->GetPosition().first + 2, newPiece->GetPosition().second));
+		}
+		// possibly append queen-side castling to the list of destinations for the king
+		if (newPiece->GetPieceType() == EPiece::king && bCanCastleSide(1))
+		{
+			DestList.push_back(std::make_pair(newPiece->GetPosition().first - 2, newPiece->GetPosition().second));
+		}
 		
 		board.highlightOn(newPiece->GetPosition(), DestList);
 	}
@@ -366,6 +379,17 @@ void CGame::LeftClick(sf::Event event)
 				// then populate it with destinations for the click provided
 				DestList = ObtainValidDestinationsForAnyPiece(newPiece);
 
+				// possibly append king-side castling to the list of destinations for the king
+				if (newPiece->GetPieceType() == EPiece::king && bCanCastleSide(0))
+				{
+					DestList.push_back(std::make_pair(newPiece->GetPosition().first + 2, newPiece->GetPosition().second));
+				}
+				// possibly append queen-side castling to the list of destinations for the king
+				if (newPiece->GetPieceType() == EPiece::king && bCanCastleSide(1))
+				{
+					DestList.push_back(std::make_pair(newPiece->GetPosition().first - 2, newPiece->GetPosition().second));
+				}
+
 				board.highlightToggle(newPiece->GetPosition(), DestList);
 			}
 			else // CGame's list of destinations already has some destinations in it
@@ -380,6 +404,17 @@ void CGame::LeftClick(sf::Event event)
 			board.highlightOff(oldPiece->GetPosition(), DestList);
 
 			DestList = ObtainValidDestinationsForAnyPiece(newPiece);
+
+			// possibly append king-side castling to the list of destinations for the king
+			if (newPiece->GetPieceType() == EPiece::king && bCanCastleSide(0))
+			{
+				DestList.push_back(std::make_pair(newPiece->GetPosition().first + 2, newPiece->GetPosition().second));
+			}
+			// possibly append queen-side castling to the list of destinations for the king
+			if (newPiece->GetPieceType() == EPiece::king && bCanCastleSide(1))
+			{
+				DestList.push_back(std::make_pair(newPiece->GetPosition().first - 2, newPiece->GetPosition().second));
+			}
 
 			board.highlightOn(newPiece->GetPosition(), DestList);
 		}
@@ -398,8 +433,8 @@ void CGame::ResetGame()
 	WinnerTxt.setString(sf::String(""));
 	PlayAgainButton.setSize(sf::Vector2f(0, 0));
 	PlayAgainTxt.setString(sf::String(""));
-	QuitButton.setSize(sf::Vector2f(0, 0));
-	QuitTxt.setString(sf::String(""));
+	CancelButton.setSize(sf::Vector2f(0, 0));
+	CancelTxt.setString(sf::String(""));
 
 	for (int File = 0; File <= 7; File++)
 	{
@@ -442,15 +477,15 @@ bool CGame::bClickOnPlayAgain(std::pair<int, int> click)
 	return bClickOnPlayAgain;
 }
 
-bool CGame::bClickOnQuit(std::pair<int, int> click)
+bool CGame::bClickOnCancel(std::pair<int, int> click)
 {
-	bool bClickOnQuit = false;
-	if ((click.first > QuitButtonTopLeft.x) && (click.first < QuitButtonTopLeft.x + QuitButton.getSize().x) && \
-		(click.second > QuitButtonTopLeft.y) && (click.second < QuitButtonTopLeft.y + QuitButton.getSize().y))
+	bool bClickOnCancel = false;
+	if ((click.first > CancelButtonTopLeft.x) && (click.first < CancelButtonTopLeft.x + CancelButton.getSize().x) && \
+		(click.second > CancelButtonTopLeft.y) && (click.second < CancelButtonTopLeft.y + CancelButton.getSize().y))
 	{
-		bClickOnQuit = true;
+		bClickOnCancel = true;
 	}
-	return bClickOnQuit;
+	return bClickOnCancel;
 }
 
 std::pair<int, int> CGame::findKingPosition(EColour colour)
@@ -471,11 +506,11 @@ std::pair<int, int> CGame::findKingPosition(EColour colour)
 	return kingPosition; // never happens, because it is always returned earlier
 }
 
-bool CGame::bCheckIfCheck(std::pair<int, int> kingPos)
+bool CGame::bCheckIfCheck(std::pair<int, int> kingPos, EColour kingColour)
 {
 	bool bIsCheck = false;
 	std::vector<std::pair<int, int>> dir;
-	EColour kingColour = board.getTeamColour(kingPos.first, kingPos.second);
+	//EColour kingColour = board.getTeamColour(kingPos.first, kingPos.second);
 
 	// first check if there is a pawn imposing check
 	int pawnForwardDir = to_int(kingColour)*2 - 1; //maps white->(-1), black->(1), since on white's turn black pawns are moving
@@ -878,11 +913,14 @@ std::vector<std::pair<int, int>> CGame::RemoveDestinationsWhereKingInCheck(std::
 	// the vector to be populated with destinations that will not put the king in check
 	std::vector<std::pair<int, int>> censoredKingDestList = {};
 
+	EPiece origDestPiece;
+	EColour origDestColour;
+
 	for (unsigned int i_ = 0; i_ < uncensoredKingDestList.size(); i_++)
 	{
 		// record the original piecetype and colour of the destination space
-		EPiece origDestPiece = board.getPieceType(uncensoredKingDestList[i_].first, uncensoredKingDestList[i_].second);
-		EColour origDestColour = board.getTeamColour(uncensoredKingDestList[i_].first, uncensoredKingDestList[i_].second);
+		origDestPiece = board.getPieceType(uncensoredKingDestList[i_].first, uncensoredKingDestList[i_].second);
+		origDestColour = board.getTeamColour(uncensoredKingDestList[i_].first, uncensoredKingDestList[i_].second);
 
 		// temporarily set the king's position to be empty when checking for check in a possible destination for the king
 		board.setPieceType(kingPosition.first, kingPosition.second, EPiece::empty);
@@ -892,7 +930,7 @@ std::vector<std::pair<int, int>> CGame::RemoveDestinationsWhereKingInCheck(std::
 		board.setPieceType(uncensoredKingDestList[i_].first, uncensoredKingDestList[i_].second, EPiece::king);
 		board.setTeamColour(uncensoredKingDestList[i_].first, uncensoredKingDestList[i_].second, currentTeamColour);
 
-		if (!bCheckIfCheck(uncensoredKingDestList[i_])) // notice the !
+		if (!bCheckIfCheck(uncensoredKingDestList[i_], currentTeamColour)) // notice the !
 		{
 			// the king would be out of check in the new destination, so it is a valid destination
 			censoredKingDestList.push_back(uncensoredKingDestList[i_]);
@@ -921,13 +959,13 @@ std::vector<std::pair<int, int>> CGame::ObtainValidDestinationsForAnyPiece(CPiec
 
 	kingPosition = findKingPosition(currentTeamColour);
 
-	bIsCheck = bCheckIfCheck(kingPosition);
+	bIsCheck = bCheckIfCheck(kingPosition, currentTeamColour);
 	
 	if (bIsCheck == true)
 	{
 		BlockCheckSpots = GetBlockCheckSpots(kingPosition);
 
-		if (piece->GetPieceType() != EPiece::king)
+		if (piece->GetPieceType() != EPiece::king) // newPiece is not a king, but the king is in check
 		{
 			UncensoredDestList = GetDestListCheckingForPin(piece);
 			for (unsigned int i_ = 0; i_ < UncensoredDestList.size(); i_++)
@@ -950,9 +988,8 @@ std::vector<std::pair<int, int>> CGame::ObtainValidDestinationsForAnyPiece(CPiec
 	}
 	else // not in check
 	{
-		if (piece->GetPieceType() != EPiece::king)
+		if (piece->GetPieceType() != EPiece::king) // newPiece is not a king, and king is not in check
 		{
-			// selected piece is not a king, and king is not in check
 			destlist = GetDestListCheckingForPin(piece);
 		}
 		else // newPiece is a king, which is not in check
@@ -966,8 +1003,96 @@ std::vector<std::pair<int, int>> CGame::ObtainValidDestinationsForAnyPiece(CPiec
 	return destlist;
 }
 
+// 0 for Kside, 1 for Qside
+bool CGame::bCanCastleSide(int side)
+{
+	bool bCanCastle = false; // the function returns false unless it is proven that castling is valid
+
+	if ((currentTeamColour == EColour::white && bCouldCastle_WhiteKSide && side == 0) || \
+		(currentTeamColour == EColour::black && bCouldCastle_BlackKSide && side == 0) || \
+		(currentTeamColour == EColour::white && bCouldCastle_WhiteQSide && side == 1) || \
+		(currentTeamColour == EColour::black && bCouldCastle_BlackQSide && side == 1))
+	{
+		int dir;
+		if (side == 0) { dir = 1; } // king side (dir = 1 since file checked in the increasing direction)
+		else { dir = -1; } // queen side (dir = -1 since file checked in the decreasing direction)
+
+		// at this point, we know [at least one of KSide and QSide Rook] and King both have NOT moved, so castling COULD be valid.
+		kingPosition = findKingPosition(currentTeamColour);
+
+		// if all spaces between king and k/qside rook are empty...
+		if (board.getPieceType(kingPosition.first + dir, kingPosition.second) == EPiece::empty && \
+			board.getPieceType(kingPosition.first + dir * 2, kingPosition.second) == EPiece::empty)
+		{
+			// castling is automatically not an option if the king is in check, so we only need to check for check in the two spaces
+			// ^^ (refer to the "else" of the "else" in ObtainValidDestinationsForAnyPiece)
+
+			/////////vvvvCOULD UNCOMMENT
+			
+			// temporarily set the king's position to be empty when checking for check in castling spaces
+			board.setPieceType(kingPosition.first, kingPosition.second, EPiece::empty);
+			board.setTeamColour(kingPosition.first, kingPosition.second, EColour::empty);
+			
+
+
+			/*
+			// temporarily move king to the space it must cross when castling to see if it is in check or not
+			board.setPieceType(kingPosition.first + dir, kingPosition.second, EPiece::king);
+			board.setTeamColour(kingPosition.first + dir, kingPosition.second, currentTeamColour);
+			*/
+
+
+			if (!bCheckIfCheck(std::make_pair(kingPosition.first + dir, kingPosition.second), currentTeamColour)) // notice the !
+			{
+				// the king would not be in check in the space it must cross - now check the destination space
+				
+
+				/*
+				// reset the space the king must cross to be empty
+				board.setPieceType(kingPosition.first + dir, kingPosition.second, EPiece::empty);
+				board.setTeamColour(kingPosition.first + dir, kingPosition.second, EColour::empty);
+				*/
+
+
+				/*
+				// temporarily move king to its castling destination space to check for check
+				board.setPieceType(kingPosition.first + dir * 2, kingPosition.second, EPiece::king);
+				board.setTeamColour(kingPosition.first + dir * 2, kingPosition.second, currentTeamColour);
+				*/
+
+
+				
+				if (!bCheckIfCheck(std::make_pair(kingPosition.first + dir * 2, kingPosition.second), currentTeamColour)) // notice the !
+				{
+					// the king would not be in check in its destination for castling; this castling is valid
+					bCanCastle = true;
+				}
+			}
+			
+
+			/*
+			// reset the castling destination space to be empty
+			board.setPieceType(kingPosition.first + dir * 2, kingPosition.second, EPiece::empty);
+			board.setTeamColour(kingPosition.first + dir * 2, kingPosition.second, EColour::empty);
+			*/
+
+		}
+
+		////////vvvvCOULD UNCOMMENT
+
+		// after checking, put the king back in its original position.
+		board.setPieceType(kingPosition.first, kingPosition.second, EPiece::king);
+		board.setTeamColour(kingPosition.first, kingPosition.second, currentTeamColour);
+
+	}
+
+	return bCanCastle;
+}
+
 void CGame::CheckIfStaleOrCheckmate()
 {
+	// when entering this function, the currentTeamColour has just been changed to the team that didn't just move, to see if they are trapped
+
 	// check if the team that didn't just move has been checkmated, or if there is stalemate, or neither.
 	bool bIsCheckmate = false;
 	bool bIsStalemate = false;
@@ -979,7 +1104,7 @@ void CGame::CheckIfStaleOrCheckmate()
 	otherKingPiece->SetPosition(findKingPosition(currentTeamColour).first, findKingPosition(currentTeamColour).second);
 	otherKingPiece->calcDestinations(&board);
 
-	int numOtherKingDests = ObtainValidDestinationsForAnyPiece(otherKingPiece).size();
+	int numOtherKingDests = ObtainValidDestinationsForAnyPiece(otherKingPiece).size(); // does not include castling locations
 	if (numOtherKingDests == 0)
 	{
 		// the piece that is used when looping through the board
@@ -1067,7 +1192,7 @@ void CGame::CheckIfStaleOrCheckmate()
 		if (NumDestForTeam == 0) // the other team is either checkmated or the game is stalemated
 		{
 			// if the other team is in check, it is checkmate
-			if (bCheckIfCheck(otherKingPiece->GetPosition()))
+			if (bCheckIfCheck(otherKingPiece->GetPosition(), currentTeamColour))
 			{
 				bIsCheckmate = true;
 				StaleOrCheckmateTxt.setString("Checkmate");
@@ -1085,6 +1210,8 @@ void CGame::CheckIfStaleOrCheckmate()
 				bIsStalemate = true;
 				StaleOrCheckmateTxt.setString("Stalemate");
 			}
+
+			CurrentTeamTxt.setString("");
 
 			PlayAgainButton.setSize(PlayAgainButtonSize);
 			PlayAgainButton.setFillColor(sf::Color::Green);
@@ -1117,6 +1244,33 @@ void CGame::switchTeam()
 	return;
 }
 
+void CGame::eliminateCastlingOptions(EPiece piecetype, std::pair<int, int> oldposition)
+{
+	if (piecetype == EPiece::king) // a king moved, so castling is no longer available for that team
+	{
+		if (currentTeamColour == EColour::white)
+		{
+			bCouldCastle_WhiteKSide = false;
+			bCouldCastle_WhiteQSide = false;
+		}
+		else if (currentTeamColour == EColour::black)
+		{
+			bCouldCastle_BlackKSide = false;
+			bCouldCastle_BlackQSide = false;
+		}
+	}
+
+	else if (piecetype == EPiece::rook) // a rook moved, so castling is no longer available for that team on that side
+	{
+		if (oldposition == std::make_pair(0, 0)) { bCouldCastle_WhiteQSide = false; }
+		else if (oldposition == std::make_pair(7, 0)) { bCouldCastle_WhiteKSide = false; }
+		else if (oldposition == std::make_pair(0, 7)) { bCouldCastle_BlackQSide = false; }
+		else if (oldposition == std::make_pair(7, 7)) { bCouldCastle_BlackKSide = false; }
+	}
+	
+	return;
+}
+
 void CGame::checkPawnPromotion()
 {
 	int lastRank; // maps white -> 7, black -> 0
@@ -1127,6 +1281,8 @@ void CGame::checkPawnPromotion()
 	{
 		if (board.getPieceType(file, lastRank) == EPiece::pawn)
 		{
+			// TODO: Add the buttons to select either a queen, rook, bishop or knight
+
 			board.setPieceType(file, lastRank, EPiece::queen);
 			board.resetPieceSprite(file, lastRank);
 			break;

@@ -65,6 +65,39 @@ void CBoard::movePiece(std::pair<int, int> oldposition, std::pair<int, int> newp
 	int ofile = oldposition.first;
 	int orank = oldposition.second;
 
+	// if castling is happening...
+	if (std::get<1>(BoardData[ofile][orank]) == EPiece::king && (abs(nfile - ofile) == 2))
+	{
+		// move the rook
+		int Rnfile; // Rnrank is the same as nrank
+		int Rofile; // Rorank is the same as orank
+		if (nfile > ofile) // castling king side - place the rook one space to the left of king
+		{
+			Rofile = 7;
+			Rnfile = nfile - 1;
+		} 
+		else // castling queen side - place the rook one space to the right of king
+		{
+			Rofile = 0;
+			Rnfile = nfile + 1;
+		}
+
+		std::get<0>(BoardData[Rnfile][nrank]) = std::get<0>(BoardData[Rofile][orank]); // new piece colour becomes old piece colour
+		std::get<0>(BoardData[Rofile][orank]) = EColour::empty; // old piece colour becomes empty
+
+
+		std::get<1>(BoardData[Rnfile][nrank]) = std::get<1>(BoardData[Rofile][orank]); // new piece type becomes old piece type (rook)
+		std::get<1>(BoardData[Rofile][orank]) = EPiece::empty; // old piece type becomes empty
+
+
+		std::get<2>(BoardData[Rnfile][nrank]) = std::get<2>(BoardData[Rofile][orank]); // new piece sprite becomes old piece sprite (rook)
+																					 // new piece sprite has location set to same as new piece itself
+		std::get<2>(BoardData[Rnfile][nrank]).setPosition(static_cast<float>(PIX_MPL*Rnfile), static_cast<float>(PIX_MPL*(7 - nrank)));
+
+		// old piece sprite has its sub-square in the texture set outside of the texture size (since empty = 9), so non-existent
+		std::get<2>(BoardData[Rofile][orank]).setTextureRect(sf::IntRect(PIX_MPL*to_int(getPieceType(Rofile, orank)), \
+			PIX_MPL*to_int(getTeamColour(Rofile, orank)), PIX_MPL, PIX_MPL));
+	}
 
 	std::get<0>(BoardData[nfile][nrank]) = std::get<0>(BoardData[ofile][orank]); // new piece colour becomes old piece colour
 	std::get<0>(BoardData[ofile][orank]) = EColour::empty; // old piece colour becomes empty
@@ -73,7 +106,7 @@ void CBoard::movePiece(std::pair<int, int> oldposition, std::pair<int, int> newp
 	std::get<1>(BoardData[nfile][nrank]) = std::get<1>(BoardData[ofile][orank]); // new piece type becomes old piece type
 	std::get<1>(BoardData[ofile][orank]) = EPiece::empty; // old piece type becomes empty
 
-	
+
 	std::get<2>(BoardData[nfile][nrank]) = std::get<2>(BoardData[ofile][orank]); // new piece sprite becomes old piece sprite
 	// new piece sprite has location set to same as new piece itself
 	std::get<2>(BoardData[nfile][nrank]).setPosition(static_cast<float>(PIX_MPL*nfile), static_cast<float>(PIX_MPL*(7 - nrank)));
