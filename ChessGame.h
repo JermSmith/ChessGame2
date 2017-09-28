@@ -17,8 +17,8 @@ public:
 	sf::Text* PassAlongResetTxt();
 	sf::RectangleShape* PassAlongPlayAgainButton();
 	sf::Text* PassAlongPlayAgainTxt();
-	sf::RectangleShape* PassAlongQuitButton();
-	sf::Text* PassAlongQuitTxt();
+	sf::RectangleShape* PassAlongCancelButton();
+	sf::Text* PassAlongCancelTxt();
 
 	void LeftClick(sf::Event);
 
@@ -37,8 +37,8 @@ private:
 	sf::Text ResetTxt;
 	sf::RectangleShape PlayAgainButton;
 	sf::Text PlayAgainTxt;
-	sf::RectangleShape QuitButton;
-	sf::Text QuitTxt;
+	sf::RectangleShape CancelButton;
+	sf::Text CancelTxt;
 
 	sf::Sprite* ptrPieceSprite;
 	sf::Sprite* ptrBoardTileSprite;
@@ -51,10 +51,15 @@ private:
 	sf::Text* ptrResetTxt;
 	sf::RectangleShape* ptrPlayAgainButton;
 	sf::Text* ptrPlayAgainTxt;
-	sf::RectangleShape* ptrQuitButton;
-	sf::Text* ptrQuitTxt;
+	sf::RectangleShape* ptrCancelButton;
+	sf::Text* ptrCancelTxt;
 
 	EColour currentTeamColour = EColour::white;
+
+	bool bCouldCastle_WhiteKSide = true;
+	bool bCouldCastle_WhiteQSide = true;
+	bool bCouldCastle_BlackKSide = true;
+	bool bCouldCastle_BlackQSide = true;
 	
 	std::pair<int, int> kingPosition;
 
@@ -70,19 +75,19 @@ private:
 	sf::Vector2f PlayAgainButtonTopLeft = { PIX_MPL * 8.125, PIX_MPL * 6 };
 	sf::Vector2f PlayAgainButtonSize = { PIX_MPL * 1.5, PIX_MPL * 0.5 };
 
-	sf::Vector2f QuitButtonTopLeft = { PIX_MPL * 9.75, PIX_MPL * 6 };
-	sf::Vector2f QuitButtonSize = { PIX_MPL * 1, PIX_MPL * 0.5 };
+	sf::Vector2f CancelButtonTopLeft = { PIX_MPL * 9.75, PIX_MPL * 6 };
+	sf::Vector2f CancelButtonSize = { PIX_MPL * 1, PIX_MPL * 0.5 };
 
 	void ResetGame();
 
 	bool bClickOffBoard(std::pair<int, int>);
 	bool bClickOnReset(std::pair<int, int>);
 	bool bClickOnPlayAgain(std::pair<int, int>);
-	bool bClickOnQuit(std::pair<int, int>);
+	bool bClickOnCancel(std::pair<int, int>);
 
 	std::pair<int, int> findKingPosition(EColour);
 
-	bool bCheckIfCheck(std::pair<int, int>);
+	bool bCheckIfCheck(std::pair<int, int>, EColour);
 
 	std::vector<std::pair<int, int>> GetBlockCheckSpots(std::pair<int, int>);
 
@@ -92,9 +97,13 @@ private:
 
 	std::vector<std::pair<int, int>> ObtainValidDestinationsForAnyPiece(CPiece*);
 
+	bool bCanCastleSide(int);
+
 	void CheckIfStaleOrCheckmate();
 
 	void switchTeam();
+
+	void eliminateCastlingOptions(EPiece, std::pair<int, int>);
 
 	void checkPawnPromotion();
 
