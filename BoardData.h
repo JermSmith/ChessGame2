@@ -75,7 +75,7 @@ public:
 
 	void setTeamColour(int, int, EColour);
 	void setPieceType(int, int, EPiece);
-	void resetPieceSprite(int, int);
+	void setPieceSprite(int, int, EColour, EPiece);
 	void setBoardSprite(int, int, sf::Sprite);
 	
 	EColour getTeamColour(int, int);

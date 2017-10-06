@@ -9,10 +9,10 @@ CBoard::CBoard()
 // these functions receive coordinates in file & rank
 void CBoard::setTeamColour(int file, int rank, EColour colour) { std::get<0>(BoardData[file][rank]) = colour; return; }
 void CBoard::setPieceType(int file, int rank, EPiece piecetype) { std::get<1>(BoardData[file][rank]) = piecetype; return; }
-void CBoard::resetPieceSprite(int file, int rank)
+void CBoard::setPieceSprite(int file, int rank, EColour colour, EPiece piecetype)
 {
-	std::get<2>(BoardData[file][rank]).setTextureRect(sf::IntRect(PIX_MPL*to_int(std::get<1>(BoardData[file][rank])), \
-		PIX_MPL*to_int(std::get<0>(BoardData[file][rank])), PIX_MPL, PIX_MPL));
+	std::get<2>(BoardData[file][rank]).setTextureRect(sf::IntRect(PIX_MPL*to_int(piecetype), \
+		PIX_MPL*to_int(colour), PIX_MPL, PIX_MPL));
 	return;
 }
 void CBoard::setBoardSprite(int file, int rank, sf::Sprite boardsprite) { std::get<3>(BoardData[file][rank]) = boardsprite; return; }

@@ -23,16 +23,6 @@ public:
 	sf::RectangleShape* PassAlongUndoButton();
 	sf::Text* PassAlongUndoTxt();
 
-	sf::Text* PassAlongPawnPromotionTxt();
-	sf::RectangleShape* PassAlongPPQueenButton();
-	sf::Text* PassAlongPPQueenTxt();
-	sf::RectangleShape* PassAlongPPRookButton();
-	sf::Text* PassAlongPPRookTxt();
-	sf::RectangleShape* PassAlongPPBishopButton();
-	sf::Text* PassAlongPPBishopTxt();
-	sf::RectangleShape* PassAlongPPKnightButton();
-	sf::Text* PassAlongPPKnightTxt();
-
 	void LeftClick(sf::Event);
 
 private:
@@ -108,6 +98,17 @@ private:
 
 	std::pair<int, int> oldClick = std::make_pair(0, 0);
 
+	// The most recent move:
+	//	get<0> is the start position of piece,
+	//	get<1> is the end position of piece,
+	//	get<2> is the original piecetype of destination,
+	//	get<3> is the original colour of the destination.
+	// The function is initialized as a white rook at (0,0) so that pressing undo has the start has no effect.
+	std::tuple<std::pair<int, int>, std::pair<int, int>, EPiece, EColour > PrevMove = { \
+		std::make_pair(0, 0), std::make_pair(0, 0), EPiece::rook, EColour::white };
+
+	bool bHasUndone = true; // used to ensure undo can only happen once
+
 	sf::Vector2f ResetButtonTopLeft = { PIX_MPL * 8.5, PIX_MPL * 2 };
 	sf::Vector2f ResetButtonSize = { PIX_MPL * 2, PIX_MPL * 0.875 };
 
@@ -117,14 +118,14 @@ private:
 	sf::Vector2f CancelButtonTopLeft = { PIX_MPL * 9.75, PIX_MPL * 6 };
 	sf::Vector2f CancelButtonSize = { PIX_MPL * 1, PIX_MPL * 0.5 };
 
-	sf::Vector2f UndoButtonTopLeft = { PIX_MPL * 9, PIX_MPL * 4 };
-	sf::Vector2f UndoButtonSize = { PIX_MPL * 1, PIX_MPL * 0.5 };
+	sf::Vector2f UndoButtonTopLeft = { PIX_MPL * 8.75, PIX_MPL * 3.25 };
+	sf::Vector2f UndoButtonSize = { PIX_MPL * 1.5, PIX_MPL * 0.5 };
 
-	sf::Vector2f PPQueenButtonTopLeft = { PIX_MPL * 1, PIX_MPL * 1 };
-	sf::Vector2f PPRookButtonTopLeft = { PIX_MPL * 2, PIX_MPL * 1 };
-	sf::Vector2f PPBishopButtonTopLeft = { PIX_MPL * 1, PIX_MPL * 2 };
-	sf::Vector2f PPKnightButtonTopLeft = { PIX_MPL * 2, PIX_MPL * 2 };
-	sf::Vector2f PPButtonSize = { PIX_MPL * 1, PIX_MPL * 0.5 };
+	sf::Vector2f PPQueenButtonTopLeft = { PIX_MPL * 0.5, PIX_MPL * 1.125 };
+	sf::Vector2f PPRookButtonTopLeft = { PIX_MPL * 2.5, PIX_MPL * 1.125 };
+	sf::Vector2f PPBishopButtonTopLeft = { PIX_MPL * 0.5, PIX_MPL * 2.0625 };
+	sf::Vector2f PPKnightButtonTopLeft = { PIX_MPL * 2.5, PIX_MPL * 2.0625 };
+	sf::Vector2f PPButtonSize = { PIX_MPL * 1.5, PIX_MPL * 0.75 };
 
 	void ResetGame();
 
@@ -160,5 +161,7 @@ private:
 	void eliminateCastlingOptions(EPiece, std::pair<int, int>);
 
 	bool bIsPawnPromotion();
+
+	void UndoPrevMove();
 
 };
