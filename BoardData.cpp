@@ -6,6 +6,7 @@ CBoard::CBoard()
 	ResetBoard();
 }
 
+// these functions receive coordinates in file & rank
 void CBoard::setTeamColour(int file, int rank, EColour colour) { std::get<0>(BoardData[file][rank]) = colour; return; }
 void CBoard::setPieceType(int file, int rank, EPiece piecetype) { std::get<1>(BoardData[file][rank]) = piecetype; return; }
 void CBoard::resetPieceSprite(int file, int rank)

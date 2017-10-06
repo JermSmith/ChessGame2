@@ -214,6 +214,18 @@ sf::Text* CGame::PassAlongCancelTxt()
 	return ptrCancelTxt;
 }
 
+sf::RectangleShape * CGame::PassAlongUndoButton()
+{
+	ptrUndoButton = &UndoButton;
+	return ptrUndoButton;
+}
+
+sf::Text * CGame::PassAlongUndoTxt()
+{
+	ptrUndoTxt = &UndoTxt;
+	return ptrUndoTxt;
+}
+
 
 sf::Text * CGame::PassAlongPawnPromotionTxt()
 {
@@ -279,6 +291,18 @@ void CGame::LeftClick(sf::Event event)
 	{
 		if (bClickOnReset(newClick))
 		{
+			PawnPromotionTxt.setString(sf::String(""));
+
+			PPQueenTxt.setString(sf::String(""));
+			PPRookTxt.setString(sf::String(""));
+			PPBishopTxt.setString(sf::String(""));
+			PPKnightTxt.setString(sf::String(""));
+
+			PPQueenButton.setSize(sf::Vector2f(0, 0));
+			PPRookButton.setSize(sf::Vector2f(0, 0));
+			PPBishopButton.setSize(sf::Vector2f(0, 0));
+			PPKnightButton.setSize(sf::Vector2f(0, 0));
+
 			StaleOrCheckmateTxt.setString(sf::String("Are you\n sure?"));
 
 			PlayAgainButton.setSize(PlayAgainButtonSize);
@@ -303,6 +327,10 @@ void CGame::LeftClick(sf::Event event)
 			CancelButton.setSize(sf::Vector2f(0, 0));
 			CancelTxt.setString(sf::String(""));
 		}
+		else if (bClickOnUndo(newClick))
+		{
+
+		}
 		else // set colour of all spaces to white
 		{
 			for (int File = 0; File <= 7; File++)
@@ -313,9 +341,22 @@ void CGame::LeftClick(sf::Event event)
 				}
 			}
 		}
+
 		return; // exit the LeftClick function early since the click was not on a piece
 	}
 	
+	// Erase the text and buttons on the side if it says "Are you\n sure?"
+	if (StaleOrCheckmateTxt.getString()[0] == sf::String("A"))
+	{
+		StaleOrCheckmateTxt.setString(sf::String(""));
+
+		PlayAgainButton.setSize(sf::Vector2f(0, 0));
+		PlayAgainTxt.setString(sf::String(""));
+
+		CancelButton.setSize(sf::Vector2f(0, 0));
+		CancelTxt.setString(sf::String(""));
+	}
+
 	// get file & rank from x- and y-location of click
 	newClick = std::make_pair(static_cast<int>(floor(newClick.first / PIX_MPL)), \
 		7 - static_cast<int>(floor(newClick.second / PIX_MPL)));
@@ -438,7 +479,80 @@ void CGame::LeftClick(sf::Event event)
 
 		DestList = {};
 
-		checkPawnPromotion();
+		if (bIsPawnPromotion())
+		{
+			PawnPromotionTxt.setString(sf::String("Pawn\n  Promotion! \nSelect a piece."));
+			
+			PPQueenButton.setSize(PPButtonSize);
+			PPQueenTxt.setString("Queen");
+			PPRookButton.setSize(PPButtonSize);
+			PPRookTxt.setString("Rook");
+			PPBishopButton.setSize(PPButtonSize);
+			PPBishopTxt.setString("Bishop");
+			PPKnightButton.setSize(PPButtonSize);
+			PPKnightTxt.setString("Knight");
+
+			sf::RenderWindow PPwindow(sf::VideoMode(PIX_MPL * 4, PIX_MPL * 4), "Pawn Promotion");
+			while (PPwindow.isOpen())
+			{
+				sf::Event PPevent;
+				while (PPwindow.pollEvent(PPevent))
+				{
+					// check different event types
+					if (PPevent.type == sf::Event::MouseButtonReleased)
+					{
+						if (PPevent.mouseButton.button == sf::Mouse::Left)
+						{
+							// the click in the new window
+							std::pair<int, int> PPClick = std::make_pair(PPevent.mouseButton.x, PPevent.mouseButton.y);
+							
+							int file = newPiece->GetPosition().first;
+							int rank = newPiece->GetPosition().second;
+
+							//int file = static_cast<int>(floor(newPiece->GetPosition().first / PIX_MPL));
+							//int rank = 7 - static_cast<int>(floor(newPiece->GetPosition().second / PIX_MPL));
+
+							if (bClickOnPPQueen(PPClick))
+							{
+								board.setPieceType(file, rank, EPiece::queen);
+								board.resetPieceSprite(file, rank);
+								PPwindow.close();
+							}
+							else if (bClickOnPPRook(PPClick))
+							{
+								board.setPieceType(file, rank, EPiece::rook);
+								board.resetPieceSprite(file, rank);
+								PPwindow.close();
+							}
+							else if (bClickOnPPBishop(PPClick))
+							{
+								board.setPieceType(file, rank, EPiece::bishop);
+								board.resetPieceSprite(file, rank);
+								PPwindow.close();
+							}
+							else if (bClickOnPPKnight(PPClick))
+							{
+								board.setPieceType(file, rank, EPiece::knight);
+								board.resetPieceSprite(file, rank);
+								PPwindow.close();
+							}
+						}
+					}
+				}
+				PPwindow.clear();
+				PPwindow.draw(PawnPromotionTxt);
+				PPwindow.draw(PPQueenButton);
+				PPwindow.draw(PPQueenTxt);
+				PPwindow.draw(PPRookButton);
+				PPwindow.draw(PPRookTxt);
+				PPwindow.draw(PPBishopButton);
+				PPwindow.draw(PPBishopTxt);
+				PPwindow.draw(PPKnightButton);
+				PPwindow.draw(PPKnightTxt);
+
+				PPwindow.display();
+			}
+		}
 
 		eliminateCastlingOptions(oldPiece->GetPieceType(), oldPiece->GetPosition());
 
@@ -551,6 +665,8 @@ void CGame::ResetGame()
 	}
 }
 
+// all of the click functions for graphics receive clicks in pixel coordinates 
+
 bool CGame::bClickOffBoard(std::pair<int, int> click)
 {
 	bool bClickOffBoard = false;
@@ -592,6 +708,61 @@ bool CGame::bClickOnCancel(std::pair<int, int> click)
 		bClickOnCancel = true;
 	}
 	return bClickOnCancel;
+}
+
+bool CGame::bClickOnUndo(std::pair<int, int> click)
+{
+	bool bClickOnUndo = false;
+	if ((click.first > UndoButtonTopLeft.x) && (click.first < UndoButtonTopLeft.x + UndoButton.getSize().x) && \
+		(click.second > UndoButtonTopLeft.y) && (click.second < UndoButtonTopLeft.y + UndoButton.getSize().y))
+	{
+		bClickOnUndo = true;
+	}
+	return bClickOnUndo;
+}
+
+bool CGame::bClickOnPPQueen(std::pair<int, int> click)
+{
+	bool bClickOnPPQueen = false;
+	if ((click.first > PPQueenButtonTopLeft.x) && (click.first < PPQueenButtonTopLeft.x + PPQueenButton.getSize().x) && \
+		(click.second > PPQueenButtonTopLeft.y) && (click.second < PPQueenButtonTopLeft.y + PPQueenButton.getSize().y))
+	{
+		bClickOnPPQueen = true;
+	}
+	return bClickOnPPQueen;
+}
+
+bool CGame::bClickOnPPRook(std::pair<int, int> click)
+{
+	bool bClickOnPPRook = false;
+	if ((click.first > PPRookButtonTopLeft.x) && (click.first < PPRookButtonTopLeft.x + PPRookButton.getSize().x) && \
+		(click.second > PPRookButtonTopLeft.y) && (click.second < PPRookButtonTopLeft.y + PPRookButton.getSize().y))
+	{
+		bClickOnPPRook = true;
+	}
+	return bClickOnPPRook;
+}
+
+bool CGame::bClickOnPPBishop(std::pair<int, int> click)
+{
+	bool bClickOnPPBishop = false;
+	if ((click.first > PPBishopButtonTopLeft.x) && (click.first < PPBishopButtonTopLeft.x + PPBishopButton.getSize().x) && \
+		(click.second > PPBishopButtonTopLeft.y) && (click.second < PPBishopButtonTopLeft.y + PPBishopButton.getSize().y))
+	{
+		bClickOnPPBishop = true;
+	}
+	return bClickOnPPBishop;
+}
+
+bool CGame::bClickOnPPKnight(std::pair<int, int> click)
+{
+	bool bClickOnPPKnight = false;
+	if ((click.first > PPKnightButtonTopLeft.x) && (click.first < PPKnightButtonTopLeft.x + PPKnightButton.getSize().x) && \
+		(click.second > PPKnightButtonTopLeft.y) && (click.second < PPKnightButtonTopLeft.y + PPKnightButton.getSize().y))
+	{
+		bClickOnPPKnight = true;
+	}
+	return bClickOnPPKnight;
 }
 
 std::pair<int, int> CGame::findKingPosition(EColour colour)
@@ -988,15 +1159,25 @@ std::vector<std::pair<int, int>> CGame::GetDestListCheckingForPin(CPiece* piece)
 			}
 			pinDestList.push_back(newPos); // append the position of the attacking (pinning) piece to DestList
 		}
-		else if (piece->GetPieceType() == EPiece::pawn && (abs(Kdir.first) + abs(Kdir.second) == 2))
+		else if (piece->GetPieceType() == EPiece::pawn)
 		{
-			if ((board.getTeamColour(piece->GetPosition().first + Kdir.first, piece->GetPosition().second + Kdir.second) != \
-				EColour::empty) && ((piece->GetColour() == EColour::white && Kdir.second > 0) || \
-					piece->GetColour() == EColour::black && Kdir.second < 0))
+			if (abs(Kdir.first) + abs(Kdir.second) == 2)
 			{
-				// the piece imposing a pin on a pawn along a forward diagonal on an immediately adjacent square is the opposite colour
-				pinDestList.push_back(std::make_pair(piece->GetPosition().first + Kdir.first, \
-					piece->GetPosition().second + Kdir.second));
+				if ((board.getTeamColour(piece->GetPosition().first + Kdir.first, piece->GetPosition().second + Kdir.second) != \
+					EColour::empty) && ((piece->GetColour() == EColour::white && Kdir.second > 0) || \
+						piece->GetColour() == EColour::black && Kdir.second < 0))
+				{
+					// the piece imposing a pin on a pawn along a forward diagonal on an immediately adjacent square is the opposite colour
+					pinDestList.push_back(std::make_pair(piece->GetPosition().first + Kdir.first, \
+						piece->GetPosition().second + Kdir.second));
+				}
+			}
+			else if (abs(Kdir.first) == 0 && abs(Kdir.second) == 1)
+			{
+				int pawnForwardDir = to_int(currentTeamColour) * -2 + 1; //maps white->(1), black->(-1)
+				// the piece imposing the pin, the pawn and the king are all in the same file
+				pinDestList.push_back(std::make_pair(piece->GetPosition().first, \
+					piece->GetPosition().second + pawnForwardDir));
 			}
 		}
 		else
@@ -1375,8 +1556,9 @@ void CGame::eliminateCastlingOptions(EPiece piecetype, std::pair<int, int> oldpo
 	return;
 }
 
-void CGame::checkPawnPromotion()
+bool CGame::bIsPawnPromotion()
 {
+	bool bIsPawnPromotion = false;
 	int lastRank; // maps white -> 7, black -> 0
 	if (currentTeamColour == EColour::white) { lastRank = 7; }
 	else { lastRank = 0; }
@@ -1385,23 +1567,10 @@ void CGame::checkPawnPromotion()
 	{
 		if (board.getPieceType(file, lastRank) == EPiece::pawn)
 		{
-			// TODO: Add the functionality to receive clicks in either the queen, rook, bishop or knight button
-
-			PawnPromotionTxt.setString(sf::String("Pawn\n  Promotion! \nSelect a piece."));
-
-			PPQueenButton.setSize(PPButtonSize);
-			PPQueenTxt.setString("Queen");
-			PPRookButton.setSize(PPButtonSize);
-			PPRookTxt.setString("Rook");
-			PPBishopButton.setSize(PPButtonSize);
-			PPBishopTxt.setString("Bishop");
-			PPKnightButton.setSize(PPButtonSize);
-			PPKnightTxt.setString("Knight");
-
-			board.setPieceType(file, lastRank, EPiece::queen);
-			board.resetPieceSprite(file, lastRank);
+			bIsPawnPromotion = true;
 			break;
 		}
 	}
+	return bIsPawnPromotion;
 }
 

@@ -20,6 +20,8 @@ public:
 	sf::Text* PassAlongPlayAgainTxt();
 	sf::RectangleShape* PassAlongCancelButton();
 	sf::Text* PassAlongCancelTxt();
+	sf::RectangleShape* PassAlongUndoButton();
+	sf::Text* PassAlongUndoTxt();
 
 	sf::Text* PassAlongPawnPromotionTxt();
 	sf::RectangleShape* PassAlongPPQueenButton();
@@ -50,6 +52,9 @@ private:
 	sf::Text PlayAgainTxt;
 	sf::RectangleShape CancelButton;
 	sf::Text CancelTxt;
+	sf::RectangleShape UndoButton;
+	sf::Text UndoTxt;
+
 	// Pawn promotion GUI items
 	sf::Text PawnPromotionTxt;
 	sf::RectangleShape PPQueenButton;
@@ -74,6 +79,9 @@ private:
 	sf::Text* ptrPlayAgainTxt;
 	sf::RectangleShape* ptrCancelButton;
 	sf::Text* ptrCancelTxt;
+	sf::RectangleShape* ptrUndoButton;
+	sf::Text* ptrUndoTxt;
+
 	// Pawn Promotion pointers for GUI
 	sf::Text* ptrPawnPromotionTxt;
 	sf::RectangleShape* ptrPPQueenButton;
@@ -109,10 +117,13 @@ private:
 	sf::Vector2f CancelButtonTopLeft = { PIX_MPL * 9.75, PIX_MPL * 6 };
 	sf::Vector2f CancelButtonSize = { PIX_MPL * 1, PIX_MPL * 0.5 };
 
-	sf::Vector2f PPQueenButtonTopLeft = { PIX_MPL * 8.375, PIX_MPL * 5 };
-	sf::Vector2f PPRookButtonTopLeft = { PIX_MPL * 9.625, PIX_MPL * 5 };
-	sf::Vector2f PPBishopButtonTopLeft = { PIX_MPL * 8.375, PIX_MPL * 5.75 };
-	sf::Vector2f PPKnightButtonTopLeft = { PIX_MPL * 9.625, PIX_MPL * 5.75 };
+	sf::Vector2f UndoButtonTopLeft = { PIX_MPL * 9, PIX_MPL * 4 };
+	sf::Vector2f UndoButtonSize = { PIX_MPL * 1, PIX_MPL * 0.5 };
+
+	sf::Vector2f PPQueenButtonTopLeft = { PIX_MPL * 1, PIX_MPL * 1 };
+	sf::Vector2f PPRookButtonTopLeft = { PIX_MPL * 2, PIX_MPL * 1 };
+	sf::Vector2f PPBishopButtonTopLeft = { PIX_MPL * 1, PIX_MPL * 2 };
+	sf::Vector2f PPKnightButtonTopLeft = { PIX_MPL * 2, PIX_MPL * 2 };
 	sf::Vector2f PPButtonSize = { PIX_MPL * 1, PIX_MPL * 0.5 };
 
 	void ResetGame();
@@ -121,6 +132,12 @@ private:
 	bool bClickOnReset(std::pair<int, int>);
 	bool bClickOnPlayAgain(std::pair<int, int>);
 	bool bClickOnCancel(std::pair<int, int>);
+	bool bClickOnUndo(std::pair<int, int>);
+
+	bool bClickOnPPQueen(std::pair<int, int>);
+	bool bClickOnPPRook(std::pair<int, int>);
+	bool bClickOnPPBishop(std::pair<int, int>);
+	bool bClickOnPPKnight(std::pair<int, int>);
 
 	std::pair<int, int> findKingPosition(EColour);
 
@@ -142,6 +159,6 @@ private:
 
 	void eliminateCastlingOptions(EPiece, std::pair<int, int>);
 
-	void checkPawnPromotion();
+	bool bIsPawnPromotion();
 
 };
