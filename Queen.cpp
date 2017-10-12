@@ -1,3 +1,4 @@
+#pragma once
 #include "Queen.h"
 
 CQueen::CQueen(EColour colour)

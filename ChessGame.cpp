@@ -34,7 +34,7 @@ CGame::CGame()
 	CreditsTxt.setCharacterSize(14);
 	CreditsTxt.setFillColor(sf::Color::White);
 	CreditsTxt.setPosition(sf::Vector2f(PIX_MPL * 8.0625, PIX_MPL * 6.625));
-	CreditsTxt.setString(sf::String("Programmed by:\n       Jeremy Smith\nUpdated:\n       October 6, 2017"));
+	CreditsTxt.setString(sf::String("Programmed by:\n       Jeremy Smith\nUpdated:\n       October 12, 2017"));
 
 	StaleOrCheckmateTxt.setFont(font);
 	StaleOrCheckmateTxt.setCharacterSize(24);
@@ -66,7 +66,7 @@ CGame::CGame()
 	PlayAgainTxt.setFont(font);
 	PlayAgainTxt.setCharacterSize(12);
 	PlayAgainTxt.setFillColor(sf::Color::Black);
-	PlayAgainTxt.setPosition(sf::Vector2f(PlayAgainButtonTopLeft.x + PlayAgainButtonSize.x / 4, \
+	PlayAgainTxt.setPosition(sf::Vector2f(PlayAgainButtonTopLeft.x + PlayAgainButtonSize.x / 16, \
 		PlayAgainButtonTopLeft.y + PlayAgainButtonSize.y / 4));
 	PlayAgainTxt.setString(sf::String(""));
 
@@ -256,27 +256,13 @@ void CGame::LeftClick(sf::Event event)
 
 		if (bClickOnReset(newClick))
 		{
-			PawnPromotionTxt.setString(sf::String(""));
-
-			PPQueenTxt.setString(sf::String(""));
-			PPRookTxt.setString(sf::String(""));
-			PPBishopTxt.setString(sf::String(""));
-			PPKnightTxt.setString(sf::String(""));
-
-			PPQueenButton.setSize(sf::Vector2f(0, 0));
-			PPRookButton.setSize(sf::Vector2f(0, 0));
-			PPBishopButton.setSize(sf::Vector2f(0, 0));
-			PPKnightButton.setSize(sf::Vector2f(0, 0));
-
 			StaleOrCheckmateTxt.setString(sf::String("Are you\n sure?"));
 
 			PlayAgainButton.setSize(PlayAgainButtonSize);
-			PlayAgainTxt.setString(sf::String("   Yes"));
-			PlayAgainTxt.setFillColor(sf::Color::Black);
+			PlayAgainTxt.setString(sf::String("       Yes"));
 
 			CancelButton.setSize(CancelButtonSize);
 			CancelTxt.setString(sf::String("Cancel"));
-			CancelTxt.setFillColor(sf::Color::Black);
 		}
 		else if (bClickOnPlayAgain(newClick))
 		{
@@ -295,10 +281,6 @@ void CGame::LeftClick(sf::Event event)
 		else if (bClickOnUndo(newClick))
 		{
 			if (!bHasUndone) { UndoPrevMove(); }
-		}
-		else 
-		{
-
 		}
 
 		return; // exit the LeftClick function early since the click was not on a piece
@@ -433,7 +415,15 @@ void CGame::LeftClick(sf::Event event)
 	if (bIsDestination) // clicked on a valid destination, based on DestList
 	{
 		bHasUndone = false; // enables the undo function
-		PrevMove = { oldPiece->GetPosition(), newPiece->GetPosition(), newPiece->GetPieceType(), newPiece->GetColour() };
+
+		eliminateCastlingOptions();
+
+		// store a copy of the previous move
+		PrevPrevMove = PrevMove;
+
+		// store the move that is currently happening as PrevMove
+		PrevMove = { oldPiece->GetPosition(), oldPiece->GetColour(), oldPiece->GetPieceType(), \
+			newPiece->GetPosition(), newPiece->GetColour(), newPiece->GetPieceType() };
 
 		board.highlightOff(oldPiece->GetPosition(), DestList);
 
@@ -443,81 +433,8 @@ void CGame::LeftClick(sf::Event event)
 
 		if (bIsPawnPromotion())
 		{
-			PawnPromotionTxt.setString(sf::String("Pawn Promotion!\nSelect a piece."));
-			
-			PPQueenButton.setSize(PPButtonSize);
-			PPQueenTxt.setString("Queen");
-			PPRookButton.setSize(PPButtonSize);
-			PPRookTxt.setString("Rook");
-			PPBishopButton.setSize(PPButtonSize);
-			PPBishopTxt.setString("Bishop");
-			PPKnightButton.setSize(PPButtonSize);
-			PPKnightTxt.setString("Knight");
-
-			sf::RenderWindow PPwindow(sf::VideoMode(PIX_MPL * 9/2, PIX_MPL * 3), "Pawn Promotion");
-			while (PPwindow.isOpen())
-			{
-				sf::Event PPevent;
-				while (PPwindow.pollEvent(PPevent))
-				{
-					// check different event types
-					if (PPevent.type == sf::Event::MouseButtonReleased)
-					{
-						if (PPevent.mouseButton.button == sf::Mouse::Left)
-						{
-							// the click in the new window
-							std::pair<int, int> PPClick = std::make_pair(PPevent.mouseButton.x, PPevent.mouseButton.y);
-							
-							int file = newPiece->GetPosition().first;
-							int rank = newPiece->GetPosition().second;
-
-							if (bClickOnPPQueen(PPClick))
-							{
-								// do not need to set colour here, because the piece retains its colour and becomes a queen
-								board.setPieceType(file, rank, EPiece::queen);
-								board.setPieceSprite(file, rank, currentTeamColour, EPiece::queen);
-								PPwindow.close();
-							}
-							else if (bClickOnPPRook(PPClick))
-							{
-								// do not need to set colour here, because the piece retains its colour and becomes a rook
-								board.setPieceType(file, rank, EPiece::rook);
-								board.setPieceSprite(file, rank, currentTeamColour, EPiece::rook);
-								PPwindow.close();
-							}
-							else if (bClickOnPPBishop(PPClick))
-							{
-								// do not need to set colour here, because the piece retains its colour and becomes a bishop
-								board.setPieceType(file, rank, EPiece::bishop);
-								board.setPieceSprite(file, rank, currentTeamColour, EPiece::bishop);
-								PPwindow.close();
-							}
-							else if (bClickOnPPKnight(PPClick))
-							{
-								// do not need to set colour here, because the piece retains its colour and becomes a knight
-								board.setPieceType(file, rank, EPiece::knight);
-								board.setPieceSprite(file, rank, currentTeamColour, EPiece::knight);
-								PPwindow.close();
-							}
-						}
-					}
-				}
-				PPwindow.clear();
-				PPwindow.draw(PawnPromotionTxt);
-				PPwindow.draw(PPQueenButton);
-				PPwindow.draw(PPQueenTxt);
-				PPwindow.draw(PPRookButton);
-				PPwindow.draw(PPRookTxt);
-				PPwindow.draw(PPBishopButton);
-				PPwindow.draw(PPBishopTxt);
-				PPwindow.draw(PPKnightButton);
-				PPwindow.draw(PPKnightTxt);
-
-				PPwindow.display();
-			}
+			DoPawnPromotion(newPiece->GetPosition());
 		}
-
-		eliminateCastlingOptions(oldPiece->GetPieceType(), oldPiece->GetPosition());
 
 		switchTeam(); //switches to the other team before checking checkmate/stalemate, so that currentTeamColour can be used
 
@@ -609,11 +526,24 @@ void CGame::LeftClick(sf::Event event)
 
 void CGame::ResetGame()
 {
+	bWhiteKing_Unmoved = true;
+	bBlackKing_Unmoved = true;
+	bWRookKSide_Unmoved = true;
+	bWRookQSide_Unmoved = true;
+	bBRookKSide_Unmoved = true;
+	bBRookQSide_Unmoved = true;
+
+	bHasUndone = true;
+	PrevMove = { \
+		std::make_pair(0, 0), EColour::white, EPiece::rook, std::make_pair(0, 0), EColour::white, EPiece::rook };
+
 	board.ResetBoard();
 	currentTeamColour = EColour::white;
-	CurrentTeamTxt.setString(sf::String("White's turn"));
+	CurrentTeamTxt.setString(sf::String("It is white's turn"));
 	StaleOrCheckmateTxt.setString(sf::String(""));
 	WinnerTxt.setString(sf::String(""));
+	ResetButton.setSize(ResetButtonSize);
+	ResetTxt.setString("Reset Game");
 	PlayAgainButton.setSize(sf::Vector2f(0, 0));
 	PlayAgainTxt.setString(sf::String(""));
 	CancelButton.setSize(sf::Vector2f(0, 0));
@@ -871,7 +801,7 @@ bool CGame::bCheckIfCheck(std::pair<int, int> kingPos, EColour kingColour)
 		}
 	}
 
-	return bIsCheck; // will be false if the function has not returned true by this point.
+	return bIsCheck; // must be false if the function has not returned true by this point.
 }
 
 std::vector<std::pair<int, int>> CGame::GetBlockCheckSpots(std::pair<int, int> kingPos)
@@ -1056,13 +986,13 @@ std::vector<std::pair<int, int>> CGame::GetDestListCheckingForPin(CPiece* piece)
 	else // the king is facing the piece in question - may be a pin
 	{
 		// set newPos to be position of piece, before moving along line defined by Kdir
-		std::pair<int, int> newPos = piece->GetPosition(); 
+		std::pair<int, int> newPos = piece->GetPosition();
 		while ((newPos.first + Kdir.first) >= 0 && (newPos.first + Kdir.first <= 7) && \
 			(newPos.second + Kdir.second >= 0) && (newPos.second + Kdir.second <= 7))
 		{
 			if (board.getTeamColour(newPos.first + Kdir.first, newPos.second + Kdir.second) != \
 				board.getTeamColour(piece->GetPosition().first, piece->GetPosition().second) && \
-					board.getTeamColour(newPos.first + Kdir.first, newPos.second + Kdir.second) != EColour::empty)
+				board.getTeamColour(newPos.first + Kdir.first, newPos.second + Kdir.second) != EColour::empty)
 				// hit a piece of the other team -- now check what type
 			{
 				if (board.getPieceType(newPos.first + Kdir.first, newPos.second + Kdir.second) == EPiece::queen)
@@ -1100,7 +1030,7 @@ std::vector<std::pair<int, int>> CGame::GetDestListCheckingForPin(CPiece* piece)
 			}
 		}
 	}
-	
+
 	std::vector<std::pair<int, int>> pinDestList = {};
 
 	if (bIsPin)
@@ -1109,6 +1039,8 @@ std::vector<std::pair<int, int>> CGame::GetDestListCheckingForPin(CPiece* piece)
 			(piece->GetPieceType() == EPiece::rook && (abs(Kdir.first) + abs(Kdir.second) == 1)) || \
 			(piece->GetPieceType() == EPiece::queen))
 		{
+			// a bishop is "pinned" along a diagonal, or a rook along an orthogonal, or a queen in any direction
+
 			std::pair<int, int> newPos = std::make_pair(Kpos.first + Kdir.first, Kpos.second + Kdir.second);
 
 			while ((board.getTeamColour(newPos.first, newPos.second) == piece->GetColour()) || \
@@ -1134,23 +1066,103 @@ std::vector<std::pair<int, int>> CGame::GetDestListCheckingForPin(CPiece* piece)
 					pinDestList.push_back(std::make_pair(piece->GetPosition().first + Kdir.first, \
 						piece->GetPosition().second + Kdir.second));
 				}
+				
+				// code to add the destination for en passant, if the diagonal for en passant is the same as the pinning direction.
+
+				// at this point, we have clicked on a pawn, and if the circumstances are correct, it can capture diagonally on
+				// a space where no piece is present.
+
+				else if (\
+					(piece->GetColour() == EColour::white && \
+					piece->GetPosition().second == to_int(ERank::Rank5) && \
+					std::get<1>(PrevMove) == EColour::black && \
+					std::get<2>(PrevMove) == EPiece::pawn && \
+					std::get<3>(PrevMove).second == to_int(ERank::Rank5) && \
+					std::get<0>(PrevMove).second == to_int(ERank::Rank7) && \
+					abs(piece->GetPosition().first - std::get<3>(PrevMove).first) == 1) \
+					|| \
+					(piece->GetColour() == EColour::black && \
+					piece->GetPosition().second == to_int(ERank::Rank4) && \
+					std::get<1>(PrevMove) == EColour::white && \
+					std::get<2>(PrevMove) == EPiece::pawn && \
+					std::get<3>(PrevMove).second == to_int(ERank::Rank4) && \
+					std::get<0>(PrevMove).second == to_int(ERank::Rank2) && \
+					abs(piece->GetPosition().first - std::get<3>(PrevMove).first) == 1) \
+					)
+				{
+					int pawnForwardDir = to_int(currentTeamColour) * -2 + 1; //maps white->(1), black->(-1)
+					int pawnSideDir = std::get<3>(PrevMove).first - piece->GetPosition().first; //decrease file->(-1), increase file->(1)
+
+					// Kdir is the dir from the king to its pinned pawn. If the pawn wants to move along this dir,
+					// or in the exact opposite direction, then it can do this.
+					if ((Kdir.first == pawnSideDir && Kdir.second == pawnForwardDir) || \
+						(Kdir.first == pawnSideDir * -1 && Kdir.second == pawnForwardDir * -1))
+					{
+						pinDestList.push_back(std::make_pair(piece->GetPosition().first + pawnSideDir, \
+							piece->GetPosition().second + pawnForwardDir));
+					}
+				}
 			}
 			else if (abs(Kdir.first) == 0 && abs(Kdir.second) == 1)
 			{
-				int pawnForwardDir = to_int(currentTeamColour) * -2 + 1; //maps white->(1), black->(-1)
 				// the piece imposing the pin, the pawn and the king are all in the same file
+				// code for en passant is omitted in this case
+
+				int pawnForwardDir = to_int(currentTeamColour) * -2 + 1; //maps white->(1), black->(-1)
+				
 				pinDestList.push_back(std::make_pair(piece->GetPosition().first, \
 					piece->GetPosition().second + pawnForwardDir));
+
+				// if the pawn has yet to move and the space is open, allow the pawn to move 2 spaces forward
+				if (((piece->GetColour() == EColour::white && piece->GetPosition().second == to_int(ERank::Rank2)) || \
+					(piece->GetColour() == EColour::black && piece->GetPosition().second == to_int(ERank::Rank7))) \
+					&& \
+					(board.getPieceType(piece->GetPosition().first, piece->GetPosition().second + 2*pawnForwardDir) == EPiece::empty))
+				{
+					pinDestList.push_back(std::make_pair(piece->GetPosition().first, \
+						piece->GetPosition().second + 2 * pawnForwardDir));
+				}
 			}
 		}
 		else
 		{
-			pinDestList = {}; // there is a pin, and the pinned piece cannot move
+			pinDestList = {}; // there is a pin, and the pinned piece has no valid moves
 		}
 	}
-	else
+	else // there is no pin -- get destinations normally
 	{
-		pinDestList = piece->GetDestinations(); // there is no pin -- get destinations normally
+		pinDestList = piece->GetDestinations();
+
+		// possible add a destination for en passant if the piece is a pawn.
+		if (piece->GetPieceType() == EPiece::pawn)
+		{
+			// at this point, we have clicked on a pawn, and if the circumstances are correct, it can capture diagonally on
+			// a space where no piece is present.
+			if (\
+				(piece->GetColour() == EColour::white && \
+				piece->GetPosition().second == to_int(ERank::Rank5) && \
+				std::get<1>(PrevMove) == EColour::black && \
+				std::get<2>(PrevMove) == EPiece::pawn && \
+				std::get<3>(PrevMove).second == to_int(ERank::Rank5) && \
+				std::get<0>(PrevMove).second == to_int(ERank::Rank7) && \
+				abs(piece->GetPosition().first - std::get<3>(PrevMove).first) == 1) \
+				|| \
+				(piece->GetColour() == EColour::black && \
+				piece->GetPosition().second == to_int(ERank::Rank4) && \
+				std::get<1>(PrevMove) == EColour::white && \
+				std::get<2>(PrevMove) == EPiece::pawn && \
+				std::get<3>(PrevMove).second == to_int(ERank::Rank4) && \
+				std::get<0>(PrevMove).second == to_int(ERank::Rank2) && \
+				abs(piece->GetPosition().first - std::get<3>(PrevMove).first) == 1) \
+				)
+			{
+				int pawnForwardDir = to_int(currentTeamColour) * -2 + 1; //maps white->(1), black->(-1)
+				int pawnSideDir = std::get<3>(PrevMove).first - piece->GetPosition().first; //decrease file->(-1), increase file->(1)
+
+				pinDestList.push_back(std::make_pair(piece->GetPosition().first + pawnSideDir, \
+					piece->GetPosition().second + pawnForwardDir));
+			}
+		}
 	}
 
 	return pinDestList;
@@ -1198,7 +1210,8 @@ std::vector<std::pair<int, int>> CGame::RemoveDestinationsWhereKingInCheck(std::
 }
 
 /* A function that wraps all functionality together for calculating and returning the list of valid destinations for
-any selected piece. Receives newPiece (type CPiece*) as input, and returns a vector of destinations for newPiece. */
+any selected piece. Receives newPiece (type CPiece*) as input, and returns a vector of destinations for newPiece. 
+Does not include castling. */
 std::vector<std::pair<int, int>> CGame::ObtainValidDestinationsForAnyPiece(CPiece* piece)
 {
 	std::vector<std::pair<int, int>> destlist;
@@ -1253,15 +1266,18 @@ std::vector<std::pair<int, int>> CGame::ObtainValidDestinationsForAnyPiece(CPiec
 	return destlist;
 }
 
-// 0 for Kside, 1 for Qside
+
 bool CGame::bCanCastleSide(int side)
 {
+	// 0 for Kside, 1 for Qside
+
 	bool bCanCastle = false; // the function returns false unless it is proven that castling is valid
 
-	if ((currentTeamColour == EColour::white && bCouldCastle_WhiteKSide && side == 0) || \
-		(currentTeamColour == EColour::black && bCouldCastle_BlackKSide && side == 0) || \
-		(currentTeamColour == EColour::white && bCouldCastle_WhiteQSide && side == 1) || \
-		(currentTeamColour == EColour::black && bCouldCastle_BlackQSide && side == 1))
+	if ((currentTeamColour == EColour::white && bWhiteKing_Unmoved && side == 0 && bWRookKSide_Unmoved) || \
+		(currentTeamColour == EColour::white && bWhiteKing_Unmoved && side == 1 && bWRookQSide_Unmoved) || \
+		(currentTeamColour == EColour::black && bBlackKing_Unmoved && side == 0 && bBRookKSide_Unmoved) || \
+		(currentTeamColour == EColour::black && bBlackKing_Unmoved && side == 1 && bBRookQSide_Unmoved))
+
 	{
 		int dir;
 		if (side == 0) { dir = 1; } // king side (dir = 1 since file checked in the increasing direction)
@@ -1271,31 +1287,59 @@ bool CGame::bCanCastleSide(int side)
 		kingPosition = findKingPosition(currentTeamColour);
 
 		// if all spaces between king and k/qside rook are empty...
-		if (board.getPieceType(kingPosition.first + dir, kingPosition.second) == EPiece::empty && \
-			board.getPieceType(kingPosition.first + dir * 2, kingPosition.second) == EPiece::empty)
+		if ((board.getPieceType(kingPosition.first + dir, kingPosition.second) == EPiece::empty && \
+			board.getPieceType(kingPosition.first + dir * 2, kingPosition.second) == EPiece::empty) && \
+			(dir == 1 || (dir == -1 && board.getPieceType(kingPosition.first + dir * 3, kingPosition.second) == EPiece::empty)))
 		{
 			if (!bCheckIfCheck(std::make_pair(kingPosition.first, kingPosition.second), currentTeamColour)) // notice the !
 			{
 				// the king is not in check - now check the space it must cross
 
+				// temporarily move the king to check whether it would be in check in the intermediate space when castling
+				board.setPieceType(kingPosition.first, kingPosition.second, EPiece::empty);
+				board.setTeamColour(kingPosition.first, kingPosition.second, EColour::empty);
+
+				board.setPieceType(kingPosition.first + dir, kingPosition.second, EPiece::king);
+				board.setTeamColour(kingPosition.first + dir, kingPosition.second, currentTeamColour);
+				
 				if (!bCheckIfCheck(std::make_pair(kingPosition.first + dir, kingPosition.second), currentTeamColour)) // notice the !
 				{
 					// the king would not be in check in the space it must cross - now check the destination space
+
+					// temporarily move the king to its potential castling destination to check if it would be in check there
+					board.setPieceType(kingPosition.first + dir, kingPosition.second, EPiece::empty);
+					board.setTeamColour(kingPosition.first + dir, kingPosition.second, EColour::empty);
+
+					board.setPieceType(kingPosition.first + 2 * dir, kingPosition.second, EPiece::king);
+					board.setTeamColour(kingPosition.first + 2 * dir, kingPosition.second, currentTeamColour);
 
 					if (!bCheckIfCheck(std::make_pair(kingPosition.first + dir * 2, kingPosition.second), currentTeamColour)) // notice the !
 					{
 						// the king would not be in check in its destination for castling; this castling is valid
 						bCanCastle = true;
-					}
-				}
-			}
-		}
 
-		// after checking, put the king back in its original position.
-		board.setPieceType(kingPosition.first, kingPosition.second, EPiece::king);
-		board.setTeamColour(kingPosition.first, kingPosition.second, currentTeamColour);
+					} // end of "if" for checking king destination
 
-	}
+				} // end of "if" for checking check at space crossed by king
+
+			} // end of "if" for checking check at original king pos
+
+			// after checking, put the king back in its original position.
+			// the following 2 are already set to empty if the king would not be in check in the space it must cross
+			board.setPieceType(kingPosition.first + dir, kingPosition.second, EPiece::empty);
+			board.setTeamColour(kingPosition.first + dir, kingPosition.second, EColour::empty);
+
+			// the following 2 are only changed from empty if the king is not in check in both its original pos and the space it must cross
+			board.setPieceType(kingPosition.first + 2 * dir, kingPosition.second, EPiece::empty);
+			board.setTeamColour(kingPosition.first + 2 * dir, kingPosition.second, EColour::empty);
+
+			// the following 2 were never changed if the king is in check in its original ("actual") position
+			board.setPieceType(kingPosition.first, kingPosition.second, EPiece::king);
+			board.setTeamColour(kingPosition.first, kingPosition.second, currentTeamColour);
+		
+		} // end of "if" for checking if the spaces between king & rook are empty or not
+
+	} // end of "if" checking if both the king and rook have not moved
 
 	return bCanCastle;
 }
@@ -1425,15 +1469,10 @@ void CGame::CheckIfStaleOrCheckmate()
 			CurrentTeamTxt.setString("");
 
 			PlayAgainButton.setSize(PlayAgainButtonSize);
-			PlayAgainButton.setFillColor(sf::Color::Green);
-			PlayAgainButton.setPosition(PlayAgainButtonTopLeft);
+			PlayAgainTxt.setString(sf::String(" Play Again"));
 
-			PlayAgainTxt.setFont(font);
-			PlayAgainTxt.setCharacterSize(12);
-			PlayAgainTxt.setFillColor(sf::Color::Black);
-			PlayAgainTxt.setPosition(sf::Vector2f(PlayAgainButtonTopLeft.x + PlayAgainButtonSize.x / 16, \
-				PlayAgainButtonTopLeft.y + PlayAgainButtonSize.y / 4));
-			PlayAgainTxt.setString(sf::String("Play Again?"));
+			ResetButton.setSize(sf::Vector2f(0, 0));
+			ResetTxt.setString(sf::String(""));
 
 		}
 	}
@@ -1455,28 +1494,26 @@ void CGame::switchTeam()
 	return;
 }
 
-void CGame::eliminateCastlingOptions(EPiece piecetype, std::pair<int, int> oldposition)
+void CGame::eliminateCastlingOptions()
 {
-	if (piecetype == EPiece::king) // a king moved, so castling is no longer available for that team
+	if (std::get<2>(PrevMove) == EPiece::king) // a king moved last turn, so castling is no longer available for that team
 	{
-		if (currentTeamColour == EColour::white)
+		if (std::get<1>(PrevMove) == EColour::white && currentTeamColour == EColour::black)
 		{
-			bCouldCastle_WhiteKSide = false;
-			bCouldCastle_WhiteQSide = false;
+			bWhiteKing_Unmoved = false;
 		}
-		else if (currentTeamColour == EColour::black)
+		else if (std::get<1>(PrevMove) == EColour::black && currentTeamColour == EColour::white)
 		{
-			bCouldCastle_BlackKSide = false;
-			bCouldCastle_BlackQSide = false;
+			bBlackKing_Unmoved = false;
 		}
 	}
 
-	else if (piecetype == EPiece::rook) // a rook moved, so castling is no longer available for that team on that side
+	else if (std::get<2>(PrevMove) == EPiece::rook) // a rook moved, so castling is no longer available for that team on that side
 	{
-		if (oldposition == std::make_pair(0, 0)) { bCouldCastle_WhiteQSide = false; }
-		else if (oldposition == std::make_pair(7, 0)) { bCouldCastle_WhiteKSide = false; }
-		else if (oldposition == std::make_pair(0, 7)) { bCouldCastle_BlackQSide = false; }
-		else if (oldposition == std::make_pair(7, 7)) { bCouldCastle_BlackKSide = false; }
+		if (std::get<0>(PrevMove) == std::make_pair(0, 0) && currentTeamColour == EColour::black) { bWRookQSide_Unmoved = false; }
+		else if (std::get<0>(PrevMove) == std::make_pair(7, 0) && currentTeamColour == EColour::black) { bWRookKSide_Unmoved = false; }
+		else if (std::get<0>(PrevMove) == std::make_pair(0, 7) && currentTeamColour == EColour::white) { bBRookQSide_Unmoved = false; }
+		else if (std::get<0>(PrevMove) == std::make_pair(7, 7) && currentTeamColour == EColour::white) { bBRookKSide_Unmoved = false; }
 	}
 	
 	return;
@@ -1500,30 +1537,190 @@ bool CGame::bIsPawnPromotion()
 	return bIsPawnPromotion;
 }
 
+void CGame::DoPawnPromotion(std::pair<int, int> PPposition)
+{
+	PawnPromotionTxt.setString(sf::String("Pawn Promotion!\nSelect a piece."));
+
+	PPQueenButton.setSize(PPButtonSize);
+	PPQueenTxt.setString("Queen");
+	PPRookButton.setSize(PPButtonSize);
+	PPRookTxt.setString("Rook");
+	PPBishopButton.setSize(PPButtonSize);
+	PPBishopTxt.setString("Bishop");
+	PPKnightButton.setSize(PPButtonSize);
+	PPKnightTxt.setString("Knight");
+
+	sf::RenderWindow PPwindow(sf::VideoMode(PIX_MPL * 9 / 2, PIX_MPL * 3), "Pawn Promotion");
+	while (PPwindow.isOpen())
+	{
+		sf::Event PPevent;
+		while (PPwindow.pollEvent(PPevent))
+		{
+			// check different event types
+			if (PPevent.type == sf::Event::MouseButtonReleased)
+			{
+				if (PPevent.mouseButton.button == sf::Mouse::Left)
+				{
+					// the click in the new window
+					std::pair<int, int> PPClick = std::make_pair(PPevent.mouseButton.x, PPevent.mouseButton.y);
+
+					int file = PPposition.first;
+					int rank = PPposition.second;
+
+					if (bClickOnPPQueen(PPClick))
+					{
+						// do not need to set colour here, because the piece retains its colour and becomes a queen
+						board.setPieceType(file, rank, EPiece::queen);
+						board.setPieceSprite(file, rank, currentTeamColour, EPiece::queen);
+						PPwindow.close();
+					}
+					else if (bClickOnPPRook(PPClick))
+					{
+						// do not need to set colour here, because the piece retains its colour and becomes a rook
+						board.setPieceType(file, rank, EPiece::rook);
+						board.setPieceSprite(file, rank, currentTeamColour, EPiece::rook);
+						PPwindow.close();
+					}
+					else if (bClickOnPPBishop(PPClick))
+					{
+						// do not need to set colour here, because the piece retains its colour and becomes a bishop
+						board.setPieceType(file, rank, EPiece::bishop);
+						board.setPieceSprite(file, rank, currentTeamColour, EPiece::bishop);
+						PPwindow.close();
+					}
+					else if (bClickOnPPKnight(PPClick))
+					{
+						// do not need to set colour here, because the piece retains its colour and becomes a knight
+						board.setPieceType(file, rank, EPiece::knight);
+						board.setPieceSprite(file, rank, currentTeamColour, EPiece::knight);
+						PPwindow.close();
+					}
+				}
+			}
+		}
+		PPwindow.clear();
+		PPwindow.draw(PawnPromotionTxt);
+		PPwindow.draw(PPQueenButton);
+		PPwindow.draw(PPQueenTxt);
+		PPwindow.draw(PPRookButton);
+		PPwindow.draw(PPRookTxt);
+		PPwindow.draw(PPBishopButton);
+		PPwindow.draw(PPBishopTxt);
+		PPwindow.draw(PPKnightButton);
+		PPwindow.draw(PPKnightTxt);
+
+		PPwindow.display();
+	}
+	return;
+}
+
 void CGame::UndoPrevMove()
 {
 	bHasUndone = true;
 
-	// the type and colour of the piece that moved
-	EPiece movedPieceType = board.getPieceType(std::get<1>(PrevMove).first, std::get<1>(PrevMove).second);
-	EColour movedPieceColour = board.getTeamColour(std::get<1>(PrevMove).first, std::get<1>(PrevMove).second);
-
-	// the type and colour of the piece that was landed on
-	EPiece destPieceType = std::get<2>(PrevMove);
-	EColour destPieceColour = std::get<3>(PrevMove);
-
-	// moved piece is reset to its original position and colour
-	board.setPieceType(std::get<0>(PrevMove).first, std::get<0>(PrevMove).second, movedPieceType);
-	board.setTeamColour(std::get<0>(PrevMove).first, std::get<0>(PrevMove).second, movedPieceColour);
-	board.setPieceSprite(std::get<0>(PrevMove).first, std::get<0>(PrevMove).second, movedPieceColour, movedPieceType);
+	// moved piece is reset to its original colour and position
+	board.setTeamColour(std::get<0>(PrevMove).first, std::get<0>(PrevMove).second, std::get<1>(PrevMove));
+	board.setPieceType(std::get<0>(PrevMove).first, std::get<0>(PrevMove).second, std::get<2>(PrevMove));
+	board.setPieceSprite(std::get<0>(PrevMove).first, std::get<0>(PrevMove).second, std::get<1>(PrevMove), std::get<2>(PrevMove));
 
 	// destination space is reset
-	board.setPieceType(std::get<1>(PrevMove).first, std::get<1>(PrevMove).second, destPieceType);
-	board.setTeamColour(std::get<1>(PrevMove).first, std::get<1>(PrevMove).second, destPieceColour);
-	board.setPieceSprite(std::get<1>(PrevMove).first, std::get<1>(PrevMove).second, destPieceColour, destPieceType);
+	board.setTeamColour(std::get<3>(PrevMove).first, std::get<3>(PrevMove).second, std::get<4>(PrevMove));
+	board.setPieceType(std::get<3>(PrevMove).first, std::get<3>(PrevMove).second, std::get<5>(PrevMove));
+	board.setPieceSprite(std::get<3>(PrevMove).first, std::get<3>(PrevMove).second, std::get<4>(PrevMove), std::get<5>(PrevMove));
 
+	// if castling happened, then reset the position of the rook and the castling validity trackers
+	if (std::get<2>(PrevMove) == EPiece::king && abs(std::get<3>(PrevMove).first - std::get<0>(PrevMove).first) == 2)
+	{
+		if (std::get<1>(PrevMove) == EColour::white) // white is the team that castled
+		{
+			// the king does not have "bColourKing_Unmoved" set to false until the other team makes their move, since
+			// eliminateCastlingOptions() uses PrevMove but is called before PrevMove is overwritten (when a destination is clicked)
+
+			if (std::get<3>(PrevMove).first > std::get<0>(PrevMove).first) // ending file > start file, so castling K side
+			{
+				board.setTeamColour(to_int(EFile::FileH), to_int(ERank::Rank1), EColour::white);
+				board.setPieceType(to_int(EFile::FileH), to_int(ERank::Rank1), EPiece::rook);
+				board.setPieceSprite(to_int(EFile::FileH), to_int(ERank::Rank1), EColour::white, EPiece::rook);
+
+				board.setTeamColour(to_int(EFile::FileF), to_int(ERank::Rank1), EColour::empty);
+				board.setPieceType(to_int(EFile::FileF), to_int(ERank::Rank1), EPiece::empty);
+				board.setPieceSprite(to_int(EFile::FileF), to_int(ERank::Rank1), EColour::empty, EPiece::empty);
+			}
+
+			else if (std::get<3>(PrevMove).first < std::get<0>(PrevMove).first) // ending file < start file, so castling Q side
+			{
+				board.setTeamColour(to_int(EFile::FileA), to_int(ERank::Rank1), EColour::white);
+				board.setPieceType(to_int(EFile::FileA), to_int(ERank::Rank1), EPiece::rook);
+				board.setPieceSprite(to_int(EFile::FileA), to_int(ERank::Rank1), EColour::white, EPiece::rook);
+
+				board.setTeamColour(to_int(EFile::FileD), to_int(ERank::Rank1), EColour::empty);
+				board.setPieceType(to_int(EFile::FileD), to_int(ERank::Rank1), EPiece::empty);
+				board.setPieceSprite(to_int(EFile::FileD), to_int(ERank::Rank1), EColour::empty, EPiece::empty);
+			}
+
+		}
+		else if (std::get<1>(PrevMove) == EColour::black) // black is the team that castled
+		{
+			// the king does not have "bColourKing_Unmoved" set to false until the other team makes their move, since
+			// eliminateCastlingOptions() uses PrevMove but is called before PrevMove is overwritten (when a destination is clicked)
+
+			if (std::get<3>(PrevMove).first > std::get<0>(PrevMove).first) // ending file > start file, so castling K side
+			{
+				board.setTeamColour(to_int(EFile::FileH), to_int(ERank::Rank8), EColour::black);
+				board.setPieceType(to_int(EFile::FileH), to_int(ERank::Rank8), EPiece::rook);
+				board.setPieceSprite(to_int(EFile::FileH), to_int(ERank::Rank8), EColour::black, EPiece::rook);
+
+				board.setTeamColour(to_int(EFile::FileF), to_int(ERank::Rank8), EColour::empty);
+				board.setPieceType(to_int(EFile::FileF), to_int(ERank::Rank8), EPiece::empty);
+				board.setPieceSprite(to_int(EFile::FileF), to_int(ERank::Rank8), EColour::empty, EPiece::empty);
+			}
+
+			else if (std::get<3>(PrevMove).first < std::get<0>(PrevMove).first) // ending file < start file, so castling Q side
+			{
+				board.setTeamColour(to_int(EFile::FileA), to_int(ERank::Rank8), EColour::black);
+				board.setPieceType(to_int(EFile::FileA), to_int(ERank::Rank8), EPiece::rook);
+				board.setPieceSprite(to_int(EFile::FileA), to_int(ERank::Rank8), EColour::black, EPiece::rook);
+
+				board.setTeamColour(to_int(EFile::FileD), to_int(ERank::Rank8), EColour::empty);
+				board.setPieceType(to_int(EFile::FileD), to_int(ERank::Rank8), EPiece::empty);
+				board.setPieceSprite(to_int(EFile::FileD), to_int(ERank::Rank8), EColour::empty, EPiece::empty);
+			}
+		}
+	}
+
+	// if en passant happened, reset the captured pawn
+	else if (std::get<2>(PrevMove) == EPiece::pawn && std::get<5>(PrevMove) == EPiece::empty && \
+		std::get<0>(PrevMove).first != std::get<3>(PrevMove).first)
+	{
+		// at this point, we know a pawn changed files without landing directly on a piece, so en passant happened
+		if (std::get<1>(PrevMove) == EColour::white)
+		{
+			// white moved, so put a black pawn in the rank one smaller than the pawn's original destination
+			board.setTeamColour(std::get<3>(PrevMove).first, std::get<3>(PrevMove).second - 1, EColour::black);
+			board.setPieceType(std::get<3>(PrevMove).first, std::get<3>(PrevMove).second - 1, EPiece::pawn);
+			board.setPieceSprite(std::get<3>(PrevMove).first, std::get<3>(PrevMove).second - 1, EColour::black, EPiece::pawn);
+		}
+		else if (std::get<1>(PrevMove) == EColour::black)
+		{
+			// black moved, so put a black pawn in the rank one smaller than the pawn's original destination
+			board.setTeamColour(std::get<3>(PrevMove).first, std::get<3>(PrevMove).second + 1, EColour::white);
+			board.setPieceType(std::get<3>(PrevMove).first, std::get<3>(PrevMove).second + 1, EPiece::pawn);
+			board.setPieceSprite(std::get<3>(PrevMove).first, std::get<3>(PrevMove).second + 1, EColour::white, EPiece::pawn);
+		}
+	}
+
+	// the group below resets checkmate or stalemate upon undo if it has been activated
+	WinnerTxt.setString("");
+	PlayAgainButton.setSize(sf::Vector2f(0, 0));
+	PlayAgainTxt.setString(sf::String(""));
+	CancelButton.setSize(sf::Vector2f(0, 0));
+	CancelTxt.setString(sf::String("")); // cancel button is only for if reset button is clicked, followed by undo
+	StaleOrCheckmateTxt.setString("");
+	ResetButton.setSize(ResetButtonSize);
+	ResetTxt.setString("Reset Game");
+
+	PrevMove = PrevPrevMove;
 	switchTeam();
 
 	return;
 }
-

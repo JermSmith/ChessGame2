@@ -85,10 +85,12 @@ private:
 
 	EColour currentTeamColour = EColour::white;
 
-	bool bCouldCastle_WhiteKSide = true;
-	bool bCouldCastle_WhiteQSide = true;
-	bool bCouldCastle_BlackKSide = true;
-	bool bCouldCastle_BlackQSide = true;
+	bool bWhiteKing_Unmoved = true;
+	bool bBlackKing_Unmoved = true;
+	bool bWRookKSide_Unmoved = true;
+	bool bWRookQSide_Unmoved = true;
+	bool bBRookKSide_Unmoved = true;
+	bool bBRookQSide_Unmoved = true;
 	
 	std::pair<int, int> kingPosition;
 
@@ -99,13 +101,18 @@ private:
 	std::pair<int, int> oldClick = std::make_pair(0, 0);
 
 	// The most recent move:
-	//	get<0> is the start position of piece,
-	//	get<1> is the end position of piece,
-	//	get<2> is the original piecetype of destination,
-	//	get<3> is the original colour of the destination.
-	// The function is initialized as a white rook at (0,0) so that pressing undo has the start has no effect.
-	std::tuple<std::pair<int, int>, std::pair<int, int>, EPiece, EColour > PrevMove = { \
-		std::make_pair(0, 0), std::make_pair(0, 0), EPiece::rook, EColour::white };
+	//	get<0> is the start pos of piece,
+	//	get<1> is original colour at start pos,
+	//	get<2> is the original piecetype at start pos,
+	//	get<3> is the end pos of piece,
+	//	get<4> is the original colour at end pos,
+	//	get<5> is the original piecetype at end pos.
+	// The function is initialized as two white rooks at (0,0) so that pressing undo has the start has no effect.
+	std::tuple<std::pair<int, int>, EColour, EPiece, std::pair<int, int>, EColour, EPiece > PrevMove = { \
+		std::make_pair(0, 0), EColour::white, EPiece::rook, std::make_pair(0, 0), EColour::white, EPiece::rook };
+
+	// this copy of PrevMove is used in the UndoPrevMove function, and specifically for undoing en passant.
+	std::tuple<std::pair<int, int>, EColour, EPiece, std::pair<int, int>, EColour, EPiece > PrevPrevMove = PrevMove;
 
 	bool bHasUndone = true; // used to ensure undo can only happen once
 
@@ -158,10 +165,10 @@ private:
 
 	void switchTeam();
 
-	void eliminateCastlingOptions(EPiece, std::pair<int, int>);
+	void eliminateCastlingOptions();
 
 	bool bIsPawnPromotion();
+	void DoPawnPromotion(std::pair<int, int>);
 
 	void UndoPrevMove();
-
 };

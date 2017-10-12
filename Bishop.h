@@ -7,5 +7,4 @@ public:
 	CBishop(EColour); // constructor
 
 	virtual void calcDestinations(CBoard*);
-
 };

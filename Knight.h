@@ -7,5 +7,4 @@ public:
 	CKnight(EColour); // constructor
 
 	virtual void calcDestinations(CBoard*);
-
 };

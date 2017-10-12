@@ -1,3 +1,4 @@
+#pragma once
 #include "Rook.h"
 
 CRook::CRook(EColour colour)

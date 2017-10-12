@@ -96,9 +96,36 @@ void CBoard::movePiece(std::pair<int, int> oldposition, std::pair<int, int> newp
 		std::get<2>(BoardData[Rnfile][nrank]).setPosition(static_cast<float>(PIX_MPL*Rnfile), static_cast<float>(PIX_MPL*(7 - nrank)));
 
 		// old piece sprite has its sub-square in the texture set outside of the texture size (since empty = 9), so non-existent
+		// Note that the line below could also use std::get<1>(BoardData[ofile][orank]) for PieceType, and get<0> for TeamColour.
 		std::get<2>(BoardData[Rofile][orank]).setTextureRect(sf::IntRect(PIX_MPL*to_int(getPieceType(Rofile, orank)), \
 			PIX_MPL*to_int(getTeamColour(Rofile, orank)), PIX_MPL, PIX_MPL));
 	}
+	// or if en passant is happening... i.e. moving piece is a pawn on a diagonal, but there is no piece in the destination
+	else if (std::get<1>(BoardData[ofile][orank]) == EPiece::pawn && \
+		std::get<1>(BoardData[nfile][nrank]) == EPiece::empty && ofile != nfile)
+	{
+		// then clear the data for the piece being captured by en passant
+		
+		if (std::get<0>(BoardData[ofile][orank]) == EColour::white) // moving piece is white
+		{
+			// Checking the colour of (ofile,orank) works because the data at the original position of the moving piece has not changed yet.
+			// The data gets cleared in the "this always happens" section below.
+
+			std::get<0>(BoardData[nfile][nrank - 1]) = EColour::empty;
+			std::get<1>(BoardData[nfile][nrank - 1]) = EPiece::empty;
+			std::get<2>(BoardData[nfile][nrank - 1]).setTextureRect(sf::IntRect(PIX_MPL*to_int(getPieceType(nfile, nrank - 1)), \
+				PIX_MPL*to_int(getTeamColour(nfile, nrank - 1)), PIX_MPL, PIX_MPL));
+		}
+		else if (std::get<0>(BoardData[ofile][orank]) == EColour::black) // moving piece is black
+		{
+			std::get<0>(BoardData[nfile][nrank + 1]) = EColour::empty;
+			std::get<1>(BoardData[nfile][nrank + 1]) = EPiece::empty;
+			std::get<2>(BoardData[nfile][nrank + 1]).setTextureRect(sf::IntRect(PIX_MPL*to_int(getPieceType(nfile, nrank + 1)), \
+				PIX_MPL*to_int(getTeamColour(nfile, nrank + 1)), PIX_MPL, PIX_MPL));
+		}
+	}
+
+	// this always happens: move the piece data to the new position, and clear the original position
 
 	std::get<0>(BoardData[nfile][nrank]) = std::get<0>(BoardData[ofile][orank]); // new piece colour becomes old piece colour
 	std::get<0>(BoardData[ofile][orank]) = EColour::empty; // old piece colour becomes empty
@@ -112,7 +139,8 @@ void CBoard::movePiece(std::pair<int, int> oldposition, std::pair<int, int> newp
 	// new piece sprite has location set to same as new piece itself
 	std::get<2>(BoardData[nfile][nrank]).setPosition(static_cast<float>(PIX_MPL*nfile), static_cast<float>(PIX_MPL*(7 - nrank)));
 
-	// old piece sprite has its sub-square in the texture set outside of the texture size, so non-existent
+	// old piece sprite has its sub-square in the texture set outside of the texture size (since empty = 9), so non-existent.
+	// Note that the line below could also use std::get<1>(BoardData[ofile][orank]) for PieceType, and get<0> for TeamColour.
 	std::get<2>(BoardData[ofile][orank]).setTextureRect(sf::IntRect(PIX_MPL*to_int(getPieceType(ofile, orank)), \
 		PIX_MPL*to_int(getTeamColour(ofile, orank)), PIX_MPL, PIX_MPL));
 }
@@ -166,7 +194,6 @@ void CBoard::ResetBoard()
 				std::get<3>(BoardData[file][rank]).setTextureRect(sf::IntRect(0, 0, PIX_MPL, PIX_MPL));
 			}
 			std::get<3>(BoardData[file][rank]).setPosition(static_cast<float>(PIX_MPL*file), static_cast<float>(PIX_MPL*(7 - rank)));
-
 		}
 	}
 	return;

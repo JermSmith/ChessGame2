@@ -1,3 +1,4 @@
+#pragma once
 #include "Bishop.h"
 
 CBishop::CBishop(EColour colour)

@@ -7,5 +7,4 @@ public:
 	CQueen(EColour); // constructor
 
 	virtual void calcDestinations(CBoard*);
-
 };

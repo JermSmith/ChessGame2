@@ -7,5 +7,4 @@ public:
 	CRook(EColour); // constructor
 
 	virtual void calcDestinations(CBoard*);
-
 };

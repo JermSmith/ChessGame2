@@ -2,8 +2,6 @@
 #include <iostream>
 #include <tuple>
 #include <SFML/Graphics.hpp>
-//#include "Piece.h"
-
 
 template<typename EEnumClass>
 int to_int(EEnumClass name)
@@ -17,7 +15,6 @@ ERank (rank 1=0, rank 8=7)
 EFile (file A=0, file H=7)
 EColour (team)
 EPiece (rook, knight, etc.)
-ERangeType (varies or fixed)
 */
 
 enum class ERank : int
@@ -58,12 +55,6 @@ enum class EPiece : int
 	pawn = 5,
 	empty = 9,
 };
-enum class ERange : int
-{
-	varies = 0,
-	fixed = 1,
-	empty = 9,
-};
 
 
 class CBoard
@@ -89,7 +80,13 @@ public:
 
 	void movePiece(std::pair<int, int>, std::pair<int, int>);
 
-private:	
+private:
+
+	// Vector of vectors [file, rank] containing tuples, which contain:
+	//	std::get<0> TeamColour
+	//	std::get<1> PieceType
+	//	std::get<2> PieceSprite
+	//	std::get<3> BoardSprite
 	std::vector < std::vector < std::tuple < EColour, EPiece, sf::Sprite, sf::Sprite > > > BoardData;
 
 	sf::Texture BoardTexture;

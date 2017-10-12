@@ -7,5 +7,4 @@ public:
 	CPawn(EColour); // constructor
 
 	void calcDestinations(CBoard*);
-
 };

@@ -1,3 +1,4 @@
+#pragma once
 #include "King.h"
 
 CKing::CKing(EColour colour)

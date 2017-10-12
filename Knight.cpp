@@ -1,3 +1,4 @@
+#pragma once
 #include "Knight.h"
 
 CKnight::CKnight(EColour colour)

@@ -1,3 +1,4 @@
+#pragma once
 #include "Pawn.h"
 
 CPawn::CPawn(EColour colour)
@@ -75,9 +76,3 @@ void CPawn::calcDestinations(CBoard* board)
 	}
 	return;
 }
-
-//std::vector<std::pair<int, int>> CPawn::GetDestinations() { return Destinations; }
-
-//bool CPawn::IsValidMove(std::vector<int>) { return false; }
-//void CPawn::Move(std::vector<int> MoveVector) { return; }
-

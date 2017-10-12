@@ -7,5 +7,4 @@ public:
 	CKing(EColour); // constructor
 
 	virtual void calcDestinations(CBoard*);
-
 };
