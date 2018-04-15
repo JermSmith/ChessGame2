@@ -68,6 +68,8 @@ void PlayGame()
 					window.draw(*Game.PassAlongCancelTxt());
 					window.draw(*Game.PassAlongUndoButton());
 					window.draw(*Game.PassAlongUndoTxt());
+					window.draw(*Game.PassAlongCompMoveButton());
+					window.draw(*Game.PassAlongCompMoveTxt());
 				}
 			}
 

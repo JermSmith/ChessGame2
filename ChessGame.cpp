@@ -39,7 +39,7 @@ CGame::CGame()
 	StaleOrCheckmateTxt.setFont(font);
 	StaleOrCheckmateTxt.setCharacterSize(24);
 	StaleOrCheckmateTxt.setFillColor(sf::Color::White);
-	StaleOrCheckmateTxt.setPosition(sf::Vector2f(PIX_MPL * 8.375, PIX_MPL * 4));
+	StaleOrCheckmateTxt.setPosition(sf::Vector2f(PIX_MPL * 8.375, PIX_MPL * 4.125));
 	StaleOrCheckmateTxt.setString(sf::String(""));
 
 	WinnerTxt.setFont(font);
@@ -82,7 +82,7 @@ CGame::CGame()
 	CancelTxt.setString(sf::String(""));
 
 	UndoButton.setSize(sf::Vector2f(UndoButtonSize));
-	UndoButton.setFillColor(sf::Color::Magenta);
+	UndoButton.setFillColor(sf::Color::Yellow);
 	UndoButton.setPosition(UndoButtonTopLeft);
 
 	UndoTxt.setFont(font);
@@ -91,6 +91,17 @@ CGame::CGame()
 	UndoTxt.setPosition(sf::Vector2f(UndoButtonTopLeft.x + UndoButtonSize.x / 4, \
 		UndoButtonTopLeft.y + UndoButtonSize.y / 4));
 	UndoTxt.setString(sf::String("Undo"));
+
+	CompMoveButton.setSize(sf::Vector2f(CompMoveButtonSize));
+	CompMoveButton.setFillColor(sf::Color::Magenta);
+	CompMoveButton.setPosition(CompMoveButtonTopLeft);
+
+	CompMoveTxt.setFont(font);
+	CompMoveTxt.setCharacterSize(14);
+	CompMoveTxt.setFillColor(sf::Color::Black);
+	CompMoveTxt.setPosition(sf::Vector2f(CompMoveButtonTopLeft.x + CompMoveButtonSize.x / 20, \
+		CompMoveButtonTopLeft.y + CompMoveButtonSize.y / 4));
+	CompMoveTxt.setString(sf::String("Generate Move"));
 
 	// Pawn Promotion items appear in the pop-up window
 	PawnPromotionTxt.setFont(font);
@@ -238,6 +249,18 @@ sf::Text * CGame::PassAlongUndoTxt()
 	return ptrUndoTxt;
 }
 
+sf::RectangleShape * CGame::PassAlongCompMoveButton()
+{
+	ptrCompMoveButton = &CompMoveButton;
+	return ptrCompMoveButton;
+}
+
+sf::Text * CGame::PassAlongCompMoveTxt()
+{
+	ptrCompMoveTxt = &CompMoveTxt;
+	return ptrCompMoveTxt;
+}
+
 void CGame::LeftClick(sf::Event event)
 {
 	// get location (in terms of pixels) of the new click -- modified to reflect file & rank after checking click positions
@@ -281,6 +304,13 @@ void CGame::LeftClick(sf::Event event)
 		else if (bClickOnUndo(newClick))
 		{
 			if (!bHasUndone) { UndoPrevMove(); }
+		}
+		else if (bClickOnCompMove(newClick))
+		{
+			// Calculate the optimal move for the current team and do it
+			std::pair<std::pair<int, int>, std::pair<int, int>> CalculatedMove;
+			CalculatedMove = CalculateOptimalMove();
+			PerformCalculatedMove(CalculatedMove);
 		}
 
 		return; // exit the LeftClick function early since the click was not on a piece
@@ -544,6 +574,8 @@ void CGame::ResetGame()
 	WinnerTxt.setString(sf::String(""));
 	ResetButton.setSize(ResetButtonSize);
 	ResetTxt.setString("Reset Game");
+	CompMoveButton.setSize(CompMoveButtonSize);
+	CompMoveTxt.setString("Generate Move");
 	PlayAgainButton.setSize(sf::Vector2f(0, 0));
 	PlayAgainTxt.setString(sf::String(""));
 	CancelButton.setSize(sf::Vector2f(0, 0));
@@ -612,6 +644,17 @@ bool CGame::bClickOnUndo(std::pair<int, int> click)
 		bClickOnUndo = true;
 	}
 	return bClickOnUndo;
+}
+
+bool CGame::bClickOnCompMove(std::pair<int, int> click)
+{
+	bool bClickOnCompMove = false;
+	if ((click.first > CompMoveButtonTopLeft.x) && (click.first < CompMoveButtonTopLeft.x + CompMoveButton.getSize().x) && \
+		(click.second > CompMoveButtonTopLeft.y) && (click.second < CompMoveButtonTopLeft.y + CompMoveButton.getSize().y))
+	{
+		bClickOnCompMove = true;
+	}
+	return bClickOnCompMove;
 }
 
 bool CGame::bClickOnPPQueen(std::pair<int, int> click)
@@ -1474,6 +1517,8 @@ void CGame::CheckIfStaleOrCheckmate()
 			ResetButton.setSize(sf::Vector2f(0, 0));
 			ResetTxt.setString(sf::String(""));
 
+			CompMoveButton.setSize(sf::Vector2f(0, 0));
+			CompMoveTxt.setString(sf::String(""));
 		}
 	}
 }
@@ -1718,9 +1763,27 @@ void CGame::UndoPrevMove()
 	StaleOrCheckmateTxt.setString("");
 	ResetButton.setSize(ResetButtonSize);
 	ResetTxt.setString("Reset Game");
+	CompMoveButton.setSize(CompMoveButtonSize);
+	CompMoveTxt.setString("Generate Move");
 
 	PrevMove = PrevPrevMove;
 	switchTeam();
 
 	return;
+}
+
+std::pair<std::pair<int, int>, std::pair<int, int>> CGame::CalculateOptimalMove()
+{
+	std::pair<int, int> StartPos;
+	std::pair<int, int> DestPos;
+
+	StartPos = std::pair<int, int>(4, 1);
+	DestPos = std::pair<int, int>(4, 3);
+
+	return std::pair<std::pair<int, int>, std::pair<int, int>>(StartPos, DestPos);
+}
+
+void CGame::PerformCalculatedMove(std::pair<std::pair<int, int>, std::pair<int, int>>)
+{
+
 }

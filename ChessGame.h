@@ -22,12 +22,16 @@ public:
 	sf::Text* PassAlongCancelTxt();
 	sf::RectangleShape* PassAlongUndoButton();
 	sf::Text* PassAlongUndoTxt();
+	sf::RectangleShape* PassAlongCompMoveButton();
+	sf::Text* PassAlongCompMoveTxt();
 
 	void LeftClick(sf::Event);
 
 private:
 
 	sf::Font font;
+
+	// Main button GUI items
 
 	sf::Sprite PieceSprite;
 	sf::Sprite BoardTileSprite;
@@ -44,17 +48,10 @@ private:
 	sf::Text CancelTxt;
 	sf::RectangleShape UndoButton;
 	sf::Text UndoTxt;
+	sf::RectangleShape CompMoveButton;
+	sf::Text CompMoveTxt;
 
-	// Pawn promotion GUI items
-	sf::Text PawnPromotionTxt;
-	sf::RectangleShape PPQueenButton;
-	sf::Text PPQueenTxt;
-	sf::RectangleShape PPRookButton;
-	sf::Text PPRookTxt;
-	sf::RectangleShape PPBishopButton;
-	sf::Text PPBishopTxt;
-	sf::RectangleShape PPKnightButton;
-	sf::Text PPKnightTxt;
+	// Main Button pointers for GUI
 
 	sf::Sprite* ptrPieceSprite;
 	sf::Sprite* ptrBoardTileSprite;
@@ -71,6 +68,19 @@ private:
 	sf::Text* ptrCancelTxt;
 	sf::RectangleShape* ptrUndoButton;
 	sf::Text* ptrUndoTxt;
+	sf::RectangleShape* ptrCompMoveButton;
+	sf::Text* ptrCompMoveTxt;
+
+	// Pawn promotion GUI items
+	sf::Text PawnPromotionTxt;
+	sf::RectangleShape PPQueenButton;
+	sf::Text PPQueenTxt;
+	sf::RectangleShape PPRookButton;
+	sf::Text PPRookTxt;
+	sf::RectangleShape PPBishopButton;
+	sf::Text PPBishopTxt;
+	sf::RectangleShape PPKnightButton;
+	sf::Text PPKnightTxt;
 
 	// Pawn Promotion pointers for GUI
 	sf::Text* ptrPawnPromotionTxt;
@@ -107,7 +117,7 @@ private:
 	//	get<3> is the end pos of piece,
 	//	get<4> is the original colour at end pos,
 	//	get<5> is the original piecetype at end pos.
-	// The function is initialized as two white rooks at (0,0) so that pressing undo has the start has no effect.
+	// The function is initialized as two white rooks at (0,0) so that pressing undo at the start has no effect.
 	std::tuple<std::pair<int, int>, EColour, EPiece, std::pair<int, int>, EColour, EPiece > PrevMove = { \
 		std::make_pair(0, 0), EColour::white, EPiece::rook, std::make_pair(0, 0), EColour::white, EPiece::rook };
 
@@ -116,7 +126,7 @@ private:
 
 	bool bHasUndone = true; // used to ensure undo can only happen once
 
-	sf::Vector2f ResetButtonTopLeft = { PIX_MPL * 8.5, PIX_MPL * 2 };
+	sf::Vector2f ResetButtonTopLeft = { PIX_MPL * 8.5, PIX_MPL * 1.75 };
 	sf::Vector2f ResetButtonSize = { PIX_MPL * 2, PIX_MPL * 0.875 };
 
 	sf::Vector2f PlayAgainButtonTopLeft = { PIX_MPL * 8.125, PIX_MPL * 6 };
@@ -125,8 +135,11 @@ private:
 	sf::Vector2f CancelButtonTopLeft = { PIX_MPL * 9.75, PIX_MPL * 6 };
 	sf::Vector2f CancelButtonSize = { PIX_MPL * 1, PIX_MPL * 0.5 };
 
-	sf::Vector2f UndoButtonTopLeft = { PIX_MPL * 8.75, PIX_MPL * 3.25 };
+	sf::Vector2f UndoButtonTopLeft = { PIX_MPL * 8.75, PIX_MPL * 2.75 };
 	sf::Vector2f UndoButtonSize = { PIX_MPL * 1.5, PIX_MPL * 0.5 };
+
+	sf::Vector2f CompMoveButtonTopLeft = { PIX_MPL * 8.5, PIX_MPL * 3.375 };
+	sf::Vector2f CompMoveButtonSize = { PIX_MPL * 2, PIX_MPL * 0.625 };
 
 	sf::Vector2f PPQueenButtonTopLeft = { PIX_MPL * 0.5, PIX_MPL * 1.125 };
 	sf::Vector2f PPRookButtonTopLeft = { PIX_MPL * 2.5, PIX_MPL * 1.125 };
@@ -141,11 +154,15 @@ private:
 	bool bClickOnPlayAgain(std::pair<int, int>);
 	bool bClickOnCancel(std::pair<int, int>);
 	bool bClickOnUndo(std::pair<int, int>);
+	bool bClickOnCompMove(std::pair<int, int>);
 
 	bool bClickOnPPQueen(std::pair<int, int>);
 	bool bClickOnPPRook(std::pair<int, int>);
 	bool bClickOnPPBishop(std::pair<int, int>);
 	bool bClickOnPPKnight(std::pair<int, int>);
+
+	std::pair<std::pair<int, int>, std::pair<int, int>> CalculateOptimalMove();
+	void PerformCalculatedMove(std::pair<std::pair<int, int>, std::pair<int, int>>);
 
 	std::pair<int, int> findKingPosition(EColour);
 
