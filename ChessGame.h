@@ -162,6 +162,7 @@ private:
 	bool bClickOnPPKnight(std::pair<int, int>);
 
 	std::pair<std::pair<int, int>, std::pair<int, int>> CalculateOptimalMove();
+	int CalculateBoardValue(EPiece);
 	void PerformCalculatedMove(std::pair<std::pair<int, int>, std::pair<int, int>>);
 
 	std::pair<int, int> findKingPosition(EColour);

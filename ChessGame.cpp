@@ -1774,16 +1774,293 @@ void CGame::UndoPrevMove()
 
 std::pair<std::pair<int, int>, std::pair<int, int>> CGame::CalculateOptimalMove()
 {
-	std::pair<int, int> StartPos;
-	std::pair<int, int> DestPos;
+	// vector to contain all pairs representing max. board value: (piece position as pair, destination position as pair)
+	std::vector<std::pair<std::pair<int, int>, std::pair<int, int>>> OptimalMoves = {};
 
-	StartPos = std::pair<int, int>(4, 1);
-	DestPos = std::pair<int, int>(4, 3);
+	CPiece *Piece;
+	int maxBoardValue = 0;
 
-	return std::pair<std::pair<int, int>, std::pair<int, int>>(StartPos, DestPos);
+	for (int file = to_int(EFile::FileA); file <= to_int(EFile::FileH); file++)
+	{
+		for (int rank = to_int(ERank::Rank1); rank <= to_int(ERank::Rank8); rank++)
+		{
+			if (board.getTeamColour(file, rank) == currentTeamColour)
+			{
+				// assign Piece to an object of correct type, based on its position on the board
+				switch (board.getPieceType(file, rank))
+				{
+				case EPiece::pawn:
+				{
+					CPawn tempObj(board.getTeamColour(file, rank));
+					Piece = &tempObj;
+					break;
+				}
+				case EPiece::rook:
+				{
+					CRook tempObj(board.getTeamColour(file, rank));
+					Piece = &tempObj;
+					break;
+				}
+				case EPiece::knight:
+				{
+					CKnight tempObj(board.getTeamColour(file, rank));
+					Piece = &tempObj;
+					break;
+				}
+				case EPiece::bishop:
+				{
+					CBishop tempObj(board.getTeamColour(file, rank));
+					Piece = &tempObj;
+					break;
+				}
+				case EPiece::queen:
+				{
+					CQueen tempObj(board.getTeamColour(file, rank));
+					Piece = &tempObj;
+					break;
+				}
+				case EPiece::king:
+				{
+					CKing tempObj(board.getTeamColour(file, rank));
+					Piece = &tempObj;
+					break;
+				}
+				default: // accounts for empty
+					CPiece tempObj;
+					Piece = &tempObj;
+					break;
+				}
+
+				Piece->SetPosition(file, rank);
+				Piece->calcDestinations(&board);
+				eliminateCastlingOptions();
+
+				DestList = ObtainValidDestinationsForAnyPiece(Piece);
+				// possibly append king-side castling to the list of destinations for the king
+				if (Piece->GetPieceType() == EPiece::king && bCanCastleSide(0))
+				{
+					DestList.push_back(std::make_pair(Piece->GetPosition().first + 2, Piece->GetPosition().second));
+				}
+				// possibly append queen-side castling to the list of destinations for the king
+				if (Piece->GetPieceType() == EPiece::king && bCanCastleSide(1))
+				{
+					DestList.push_back(std::make_pair(Piece->GetPosition().first - 2, Piece->GetPosition().second));
+				}
+
+				EPiece origDestPiece;
+				EColour origDestColour;
+
+				int boardValue = 0;
+
+				for (unsigned int i_ = 0; i_ < DestList.size(); i_++)
+				{
+					// record original destination piecetype and colour
+					origDestPiece = board.getPieceType(DestList[i_].first, DestList[i_].second);
+					origDestColour = board.getTeamColour(DestList[i_].first, DestList[i_].second);
+					
+					// overwrite destination with Piece
+					board.setPieceType(DestList[i_].first, DestList[i_].second, Piece->GetPieceType());
+					board.setTeamColour(DestList[i_].first, DestList[i_].second, currentTeamColour);
+
+					// set original piece position to empty
+					board.setPieceType(file, rank, EPiece::empty);
+					board.setTeamColour(file, rank, EColour::empty);
+
+					// calculate board value
+					boardValue = CalculateBoardValue(Piece->GetPieceType());
+
+					// if board value is greater than the previous record, then refresh the list of OptimalMoves
+					if (boardValue > maxBoardValue)
+					{
+						maxBoardValue = boardValue;
+						OptimalMoves.resize(0);
+						OptimalMoves.push_back(std::make_pair(Piece->GetPosition(), DestList[i_]));
+					}
+					else if (boardValue == maxBoardValue)
+					{
+						OptimalMoves.push_back(std::make_pair(Piece->GetPosition(), DestList[i_]));
+					}
+
+					// return the board to the original configuration
+					board.setPieceType(DestList[i_].first, DestList[i_].second, origDestPiece);
+					board.setTeamColour(DestList[i_].first, DestList[i_].second, origDestColour);
+					board.setPieceType(file, rank, Piece->GetPieceType());
+					board.setTeamColour(file, rank, Piece->GetColour());
+				}
+			}
+		}
+	}
+
+	return OptimalMoves.at(OptimalMoves.size() - 1);
 }
 
-void CGame::PerformCalculatedMove(std::pair<std::pair<int, int>, std::pair<int, int>>)
+int CGame::CalculateBoardValue(EPiece piecetype)
 {
+	int boardvalue = 0;
+	// calculates the value of the board at the moment the function is called. Does not change the board.
+	
+	// ideas:
+
+	// sum the value of all material of the other team as a number to subtract
+	// // pawns increase in worth with increasing rank -- pawns on last rank are worth a queen
+	// // knights increase in worth with proximity to centre
+	// // bishops increase in worth in centre
+
+	// moving one's own high-value piece subtracts points from board value (e.g. queen, king or rook)
+
+	// if queen, rook, bishop, knight, or putting in check or checkmate is a destination:
+	// // assign points accordingly
+
+	// if pawn or knight (especially if fork) attacks high value pieces at its destination:
+	// // assign points accordingly
+
+	// if bishop attacks knight or especially rook at its destination:
+	// // assign points accordinly
+
+	// if rook attacks bishop or knight at its destination:
+	// // assign points accordingly
+
+	// if lined up with a queen, rook, bishop, or knight:
+	// // determine if lined up with one's own queen, rook, or bishop; or in range of knight, pawn, or king
+	// // assign points accordingly
+
+
+	if (piecetype == EPiece::pawn) { boardvalue = 100; }
+	if (piecetype == EPiece::knight) { boardvalue = 300; }
+	if (piecetype == EPiece::bishop) { boardvalue = 325; }
+	if (piecetype == EPiece::rook) { boardvalue = 500; }
+	if (piecetype == EPiece::queen) { boardvalue = 900; }
+	if (piecetype == EPiece::king) { boardvalue = 1; }
+
+	return boardvalue;
+}
+
+void CGame::PerformCalculatedMove(std::pair<std::pair<int, int>, std::pair<int, int>> CalculatedMove)
+{
+	// set file & rank of oldClick and newClick from x- and y-locations in the pairs in CalculatedMove
+	oldClick = std::make_pair(CalculatedMove.first.first, CalculatedMove.first.second);
+	std::pair<int, int> newClick = std::make_pair(CalculatedMove.second.first, CalculatedMove.second.second);
+
+	CPiece *oldPiece;
+	CPiece *newPiece;
+
+	// assign oldPiece to an object of correct type for the piece
+	switch (board.getPieceType(oldClick.first, oldClick.second))
+	{
+	case EPiece::pawn:
+	{
+		CPawn tempObj(board.getTeamColour(oldClick.first, oldClick.second));
+		oldPiece = &tempObj;
+		break;
+	}
+	case EPiece::rook:
+	{
+		CRook tempObj(board.getTeamColour(oldClick.first, oldClick.second));
+		oldPiece = &tempObj;
+		break;
+	}
+	case EPiece::knight:
+	{
+		CKnight tempObj(board.getTeamColour(oldClick.first, oldClick.second));
+		oldPiece = &tempObj;
+		break;
+	}
+	case EPiece::bishop:
+	{
+		CBishop tempObj(board.getTeamColour(oldClick.first, oldClick.second));
+		oldPiece = &tempObj;
+		break;
+	}
+	case EPiece::queen:
+	{
+		CQueen tempObj(board.getTeamColour(oldClick.first, oldClick.second));
+		oldPiece = &tempObj;
+		break;
+	}
+	case EPiece::king:
+	{
+		CKing tempObj(board.getTeamColour(oldClick.first, oldClick.second));
+		oldPiece = &tempObj;
+		break;
+	}
+	default: // accounts for empty
+		CPiece tempObj;
+		oldPiece = &tempObj;
+		break;
+	}
+
+	// assign newPiece to an object of correct type for the piece
+	switch (board.getPieceType(newClick.first, newClick.second))
+	{
+	case EPiece::pawn:
+	{
+		CPawn tempObj(board.getTeamColour(newClick.first, newClick.second));
+		newPiece = &tempObj;
+		break;
+	}
+	case EPiece::rook:
+	{
+		CRook tempObj(board.getTeamColour(newClick.first, newClick.second));
+		newPiece = &tempObj;
+		break;
+	}
+	case EPiece::knight:
+	{
+		CKnight tempObj(board.getTeamColour(newClick.first, newClick.second));
+		newPiece = &tempObj;
+		break;
+	}
+	case EPiece::bishop:
+	{
+		CBishop tempObj(board.getTeamColour(newClick.first, newClick.second));
+		newPiece = &tempObj;
+		break;
+	}
+	case EPiece::queen:
+	{
+		CQueen tempObj(board.getTeamColour(newClick.first, newClick.second));
+		newPiece = &tempObj;
+		break;
+	}
+	case EPiece::king:
+	{
+		CKing tempObj(board.getTeamColour(newClick.first, newClick.second));
+		newPiece = &tempObj;
+		break;
+	}
+	default:
+		CPiece tempObj;
+		newPiece = &tempObj;
+		break;
+	}
+
+	oldPiece->SetPosition(oldClick.first, oldClick.second);
+	newPiece->SetPosition(newClick.first, newClick.second);
+
+	bHasUndone = false; // enables the undo function
+
+	eliminateCastlingOptions();
+	
+	// store a copy of the previous move
+	PrevPrevMove = PrevMove;
+	
+	// store the move that is currently happening as PrevMove
+	PrevMove = { oldPiece->GetPosition(), oldPiece->GetColour(), oldPiece->GetPieceType(), \
+		newPiece->GetPosition(), newPiece->GetColour(), newPiece->GetPieceType() };
+
+	board.highlightOff(oldPiece->GetPosition(), DestList);
+
+	board.movePiece(oldPiece->GetPosition(), newPiece->GetPosition());
+
+	DestList = {};
+
+	if (bIsPawnPromotion())
+	{
+		DoPawnPromotion(newPiece->GetPosition());
+	}
+	
+	switchTeam(); //switches to the other team before checking checkmate/stalemate, so that currentTeamColour can be used
+
+	CheckIfStaleOrCheckmate();
 
 }
