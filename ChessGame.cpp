@@ -1774,133 +1774,395 @@ void CGame::UndoPrevMove()
 
 std::pair<std::pair<int, int>, std::pair<int, int>> CGame::CalculateOptimalMove()
 {
-	// vector to contain all pairs representing max. board value: (piece position as pair, destination position as pair)
-	std::vector<std::pair<std::pair<int, int>, std::pair<int, int>>> OptimalMoves = {};
+	std::srand(static_cast<int>(time(NULL)));
+	
+	// vector to contain the pair corresponding to max board value: (piece position as pair, destination position as pair)
+	// initialized as ((0,0),(0,0)) and overwritten later
+	std::pair<std::pair<int, int>, std::pair<int, int>> OptimalMove = std::make_pair(std::make_pair(0, 0), std::make_pair(0, 0));
 
-	CPiece *Piece;
+	EColour currentTeam; // used for the team that makes the first and thrid move in the analysis
+	EColour otherTeam; // used for the team that makes the second move in the analysis
+	if (currentTeamColour == EColour::white) // currentTeamColour is the variable that spans all functions in chessgame.cpp
+	{
+		currentTeam = EColour::white;
+		otherTeam = EColour::black;
+	}
+	else
+	{
+		currentTeam = EColour::black;
+		otherTeam = EColour::white;
+	}
+	CPiece *Piece1;
+	CPiece *Piece2;
+	CPiece *Piece3;
+	std::vector<std::pair<int, int>> DestList1 = {};
+	std::vector<std::pair<int, int>> DestList2 = {};
+	std::vector<std::pair<int, int>> DestList3 = {};
 	int maxBoardValue = 0;
 
+	// loop through board as current team
+	for (int file1 = to_int(EFile::FileA); file1 <= to_int(EFile::FileH); file1++)
+	{
+		for (int rank1 = to_int(ERank::Rank1); rank1 <= to_int(ERank::Rank8); rank1++)
+		{
+			if (board.getTeamColour(file1, rank1) == currentTeamColour)
+			{
+				// assign Piece to an object of correct type, based on its position on the board
+				switch (board.getPieceType(file1, rank1))
+				{
+				case EPiece::pawn:
+				{
+					CPawn tempObj(board.getTeamColour(file1, rank1));
+					Piece1 = &tempObj;
+					break;
+				}
+				case EPiece::rook:
+				{
+					CRook tempObj(board.getTeamColour(file1, rank1));
+					Piece1 = &tempObj;
+					break;
+				}
+				case EPiece::knight:
+				{
+					CKnight tempObj(board.getTeamColour(file1, rank1));
+					Piece1 = &tempObj;
+					break;
+				}
+				case EPiece::bishop:
+				{
+					CBishop tempObj(board.getTeamColour(file1, rank1));
+					Piece1 = &tempObj;
+					break;
+				}
+				case EPiece::queen:
+				{
+					CQueen tempObj(board.getTeamColour(file1, rank1));
+					Piece1 = &tempObj;
+					break;
+				}
+				case EPiece::king:
+				{
+					CKing tempObj(board.getTeamColour(file1, rank1));
+					Piece1 = &tempObj;
+					break;
+				}
+				default: // accounts for empty
+					CPiece tempObj;
+					Piece1 = &tempObj;
+					break;
+				}
+
+				Piece1->SetPosition(file1, rank1);
+				Piece1->calcDestinations(&board);
+				eliminateCastlingOptions();
+
+				DestList1 = ObtainValidDestinationsForAnyPiece(Piece1);
+				// possibly append king-side castling to the list of destinations for the king
+				if (Piece1->GetPieceType() == EPiece::king && bCanCastleSide(0))
+				{
+					DestList1.push_back(std::make_pair(Piece1->GetPosition().first + 2, Piece1->GetPosition().second));
+				}
+				// possibly append queen-side castling to the list of destinations for the king
+				if (Piece1->GetPieceType() == EPiece::king && bCanCastleSide(1))
+				{
+					DestList1.push_back(std::make_pair(Piece1->GetPosition().first - 2, Piece1->GetPosition().second));
+				}
+
+				EPiece origDestPiece1;
+				EColour origDestColour1;
+
+				for (unsigned int i_1 = 0; i_1 < DestList1.size(); i_1++)
+				{
+					// record original destination piecetype and colour
+					origDestPiece1 = board.getPieceType(DestList1[i_1].first, DestList1[i_1].second);
+					origDestColour1 = board.getTeamColour(DestList1[i_1].first, DestList1[i_1].second);
+					
+					// overwrite destination with Piece
+					board.setPieceType(DestList1[i_1].first, DestList1[i_1].second, Piece1->GetPieceType());
+					board.setTeamColour(DestList1[i_1].first, DestList1[i_1].second, currentTeamColour);
+
+					// set original piece position to empty
+					board.setPieceType(file1, rank1, EPiece::empty);
+					board.setTeamColour(file1, rank1, EColour::empty);
+
+					
+					// switching teams (temporarily) to find best counter-move from other team
+					currentTeamColour = otherTeam;
+
+					// loop through board as other team
+					for (int file2 = to_int(EFile::FileA); file2 <= to_int(EFile::FileH); file2++)
+					{
+						for (int rank2 = to_int(ERank::Rank1); rank2 <= to_int(ERank::Rank8); rank2++)
+						{
+							if (board.getTeamColour(file2, rank2) == currentTeamColour)
+							{
+								// assign Piece to an object of correct type, based on its position on the board
+								switch (board.getPieceType(file2, rank2))
+								{
+								case EPiece::pawn:
+								{
+									CPawn tempObj(board.getTeamColour(file2, rank2));
+									Piece2 = &tempObj;
+									break;
+								}
+								case EPiece::rook:
+								{
+									CRook tempObj(board.getTeamColour(file2, rank2));
+									Piece2 = &tempObj;
+									break;
+								}
+								case EPiece::knight:
+								{
+									CKnight tempObj(board.getTeamColour(file2, rank2));
+									Piece2 = &tempObj;
+									break;
+								}
+								case EPiece::bishop:
+								{
+									CBishop tempObj(board.getTeamColour(file2, rank2));
+									Piece2 = &tempObj;
+									break;
+								}
+								case EPiece::queen:
+								{
+									CQueen tempObj(board.getTeamColour(file2, rank2));
+									Piece2 = &tempObj;
+									break;
+								}
+								case EPiece::king:
+								{
+									CKing tempObj(board.getTeamColour(file2, rank2));
+									Piece2 = &tempObj;
+									break;
+								}
+								default: // accounts for empty
+									CPiece tempObj;
+									Piece2 = &tempObj;
+									break;
+								}
+
+								Piece2->SetPosition(file2, rank2);
+								Piece2->calcDestinations(&board);
+								eliminateCastlingOptions();
+
+								DestList2 = ObtainValidDestinationsForAnyPiece(Piece2);
+								// possibly append king-side castling to the list of destinations for the king
+								if (Piece2->GetPieceType() == EPiece::king && bCanCastleSide(0))
+								{
+									DestList2.push_back(std::make_pair(Piece2->GetPosition().first + 2, Piece2->GetPosition().second));
+								}
+								// possibly append queen-side castling to the list of destinations for the king
+								if (Piece2->GetPieceType() == EPiece::king && bCanCastleSide(1))
+								{
+									DestList2.push_back(std::make_pair(Piece2->GetPosition().first - 2, Piece2->GetPosition().second));
+								}
+
+								EPiece origDestPiece2;
+								EColour origDestColour2;
+
+								for (unsigned int i_2 = 0; i_2 < DestList2.size(); i_2++)
+								{
+									// record original destination piecetype and colour
+									origDestPiece2 = board.getPieceType(DestList2[i_2].first, DestList2[i_2].second);
+									origDestColour2 = board.getTeamColour(DestList2[i_2].first, DestList2[i_2].second);
+
+									// overwrite destination with Piece
+									board.setPieceType(DestList2[i_2].first, DestList2[i_2].second, Piece2->GetPieceType());
+									board.setTeamColour(DestList2[i_2].first, DestList2[i_2].second, currentTeamColour);
+
+									// set original piece position to empty
+									board.setPieceType(file2, rank2, EPiece::empty);
+									board.setTeamColour(file2, rank2, EColour::empty);
+
+
+									// switching teams back to original to find best counter-move from current team
+									currentTeamColour = currentTeam;
+
+									// loop through board as other team
+									for (int file3 = to_int(EFile::FileA); file3 <= to_int(EFile::FileH); file3++)
+									{
+										for (int rank3 = to_int(ERank::Rank1); rank3 <= to_int(ERank::Rank8); rank3++)
+										{
+											if (board.getTeamColour(file3, rank3) == currentTeamColour)
+											{
+												// assign Piece to an object of correct type, based on its position on the board
+												switch (board.getPieceType(file3, rank3))
+												{
+												case EPiece::pawn:
+												{
+													CPawn tempObj(board.getTeamColour(file3, rank3));
+													Piece3 = &tempObj;
+													break;
+												}
+												case EPiece::rook:
+												{
+													CRook tempObj(board.getTeamColour(file3, rank3));
+													Piece3 = &tempObj;
+													break;
+												}
+												case EPiece::knight:
+												{
+													CKnight tempObj(board.getTeamColour(file3, rank3));
+													Piece3 = &tempObj;
+													break;
+												}
+												case EPiece::bishop:
+												{
+													CBishop tempObj(board.getTeamColour(file3, rank3));
+													Piece3 = &tempObj;
+													break;
+												}
+												case EPiece::queen:
+												{
+													CQueen tempObj(board.getTeamColour(file3, rank3));
+													Piece3 = &tempObj;
+													break;
+												}
+												case EPiece::king:
+												{
+													CKing tempObj(board.getTeamColour(file3, rank3));
+													Piece3 = &tempObj;
+													break;
+												}
+												default: // accounts for empty
+													CPiece tempObj;
+													Piece3 = &tempObj;
+													break;
+												}
+
+												Piece3->SetPosition(file3, rank3);
+												Piece3->calcDestinations(&board);
+												eliminateCastlingOptions();
+
+												DestList3 = ObtainValidDestinationsForAnyPiece(Piece3);
+												// possibly append king-side castling to the list of destinations for the king
+												if (Piece3->GetPieceType() == EPiece::king && bCanCastleSide(0))
+												{
+													DestList3.push_back(std::make_pair(Piece3->GetPosition().first + 2, Piece3->GetPosition().second));
+												}
+												// possibly append queen-side castling to the list of destinations for the king
+												if (Piece3->GetPieceType() == EPiece::king && bCanCastleSide(1))
+												{
+													DestList3.push_back(std::make_pair(Piece3->GetPosition().first - 2, Piece3->GetPosition().second));
+												}
+
+												EPiece origDestPiece3;
+												EColour origDestColour3;
+
+												int boardValue = 0;
+												
+												for (unsigned int i_3 = 0; i_3 < DestList3.size(); i_3++)
+												{
+													// record original destination piecetype and colour
+													origDestPiece3 = board.getPieceType(DestList3[i_3].first, DestList3[i_3].second);
+													origDestColour3 = board.getTeamColour(DestList3[i_3].first, DestList3[i_3].second);
+
+													// overwrite destination with Piece
+													board.setPieceType(DestList3[i_3].first, DestList3[i_3].second, Piece3->GetPieceType());
+													board.setTeamColour(DestList3[i_3].first, DestList3[i_3].second, currentTeamColour);
+
+													// set original piece position to empty
+													board.setPieceType(file3, rank3, EPiece::empty);
+													board.setTeamColour(file3, rank3, EColour::empty);
+
+													// calculate board value (takes piece type - uses type of first move - piece1)
+													boardValue = CalculateBoardValue(Piece1->GetPieceType());
+
+													// if board value is greater than the previous record, or, if OptimalMove has not been 
+													// changed from its initialization as ((0,0),(0,0)), then refresh the list of OptimalMoves
+													if ((boardValue > maxBoardValue) || (OptimalMove.first == OptimalMove.second))
+													{
+														maxBoardValue = boardValue;
+														// optimalMove stores the move by currentTeam that results in this boardvalue
+														OptimalMove = std::make_pair(Piece1->GetPosition(), DestList1[i_1]);
+													}
+													else if (boardValue == maxBoardValue)
+													{
+														if ((std::rand() % 100) < 10) // about 10% chance to replace the optimal move
+														{
+															OptimalMove = std::make_pair(Piece1->GetPosition(), DestList1[i_1]);
+														} // otherwise, optimalmove remains unchanged
+													}
+
+													// return the board to the configuration before currentTeam's counter-counter-move
+													board.setPieceType(DestList3[i_3].first, DestList3[i_3].second, origDestPiece3);
+													board.setTeamColour(DestList3[i_3].first, DestList3[i_3].second, origDestColour3);
+													board.setPieceType(file3, rank3, Piece3->GetPieceType());
+													board.setTeamColour(file3, rank3, Piece3->GetColour());
+												}
+											}
+										}
+									}
+									// return the board to the configuration before currentTeam's counter-counter-move
+									board.setPieceType(DestList2[i_2].first, DestList2[i_2].second, origDestPiece2);
+									board.setTeamColour(DestList2[i_2].first, DestList2[i_2].second, origDestColour2);
+									board.setPieceType(file2, rank2, Piece2->GetPieceType());
+									board.setTeamColour(file2, rank2, Piece2->GetColour());
+								}
+							}
+						}
+					}
+					// return the board to the configuration before currentTeam's counter-counter-move
+					board.setPieceType(DestList1[i_1].first, DestList1[i_1].second, origDestPiece1);
+					board.setTeamColour(DestList1[i_1].first, DestList1[i_1].second, origDestColour1);
+					board.setPieceType(file1, rank1, Piece1->GetPieceType());
+					board.setTeamColour(file1, rank1, Piece1->GetColour());
+				}
+			}
+		}
+	}
+
+	return OptimalMove;
+}
+
+int CGame::CalculateBoardValue(EPiece piecetype)
+{
+	int boardValue = 0;
+	int colourIndex = 1; // currentTeam = 1; other team = -1.
+	// calculates the value of the board at the moment the function is called. Does not change the board.
+	// the function should be called when piece has been [temporarily] moved to one of its destinations.
+	
+	// loop through the spaces on the board, adding or subtracting value from boardValue
 	for (int file = to_int(EFile::FileA); file <= to_int(EFile::FileH); file++)
 	{
 		for (int rank = to_int(ERank::Rank1); rank <= to_int(ERank::Rank8); rank++)
 		{
 			if (board.getTeamColour(file, rank) == currentTeamColour)
 			{
-				// assign Piece to an object of correct type, based on its position on the board
-				switch (board.getPieceType(file, rank))
-				{
-				case EPiece::pawn:
-				{
-					CPawn tempObj(board.getTeamColour(file, rank));
-					Piece = &tempObj;
-					break;
-				}
-				case EPiece::rook:
-				{
-					CRook tempObj(board.getTeamColour(file, rank));
-					Piece = &tempObj;
-					break;
-				}
-				case EPiece::knight:
-				{
-					CKnight tempObj(board.getTeamColour(file, rank));
-					Piece = &tempObj;
-					break;
-				}
-				case EPiece::bishop:
-				{
-					CBishop tempObj(board.getTeamColour(file, rank));
-					Piece = &tempObj;
-					break;
-				}
-				case EPiece::queen:
-				{
-					CQueen tempObj(board.getTeamColour(file, rank));
-					Piece = &tempObj;
-					break;
-				}
-				case EPiece::king:
-				{
-					CKing tempObj(board.getTeamColour(file, rank));
-					Piece = &tempObj;
-					break;
-				}
-				default: // accounts for empty
-					CPiece tempObj;
-					Piece = &tempObj;
-					break;
-				}
-
-				Piece->SetPosition(file, rank);
-				Piece->calcDestinations(&board);
-				eliminateCastlingOptions();
-
-				DestList = ObtainValidDestinationsForAnyPiece(Piece);
-				// possibly append king-side castling to the list of destinations for the king
-				if (Piece->GetPieceType() == EPiece::king && bCanCastleSide(0))
-				{
-					DestList.push_back(std::make_pair(Piece->GetPosition().first + 2, Piece->GetPosition().second));
-				}
-				// possibly append queen-side castling to the list of destinations for the king
-				if (Piece->GetPieceType() == EPiece::king && bCanCastleSide(1))
-				{
-					DestList.push_back(std::make_pair(Piece->GetPosition().first - 2, Piece->GetPosition().second));
-				}
-
-				EPiece origDestPiece;
-				EColour origDestColour;
-
-				int boardValue = 0;
-
-				for (unsigned int i_ = 0; i_ < DestList.size(); i_++)
-				{
-					// record original destination piecetype and colour
-					origDestPiece = board.getPieceType(DestList[i_].first, DestList[i_].second);
-					origDestColour = board.getTeamColour(DestList[i_].first, DestList[i_].second);
-					
-					// overwrite destination with Piece
-					board.setPieceType(DestList[i_].first, DestList[i_].second, Piece->GetPieceType());
-					board.setTeamColour(DestList[i_].first, DestList[i_].second, currentTeamColour);
-
-					// set original piece position to empty
-					board.setPieceType(file, rank, EPiece::empty);
-					board.setTeamColour(file, rank, EColour::empty);
-
-					// calculate board value
-					boardValue = CalculateBoardValue(Piece->GetPieceType());
-
-					// if board value is greater than the previous record, then refresh the list of OptimalMoves
-					if (boardValue > maxBoardValue)
-					{
-						maxBoardValue = boardValue;
-						OptimalMoves.resize(0);
-						OptimalMoves.push_back(std::make_pair(Piece->GetPosition(), DestList[i_]));
-					}
-					else if (boardValue == maxBoardValue)
-					{
-						OptimalMoves.push_back(std::make_pair(Piece->GetPosition(), DestList[i_]));
-					}
-
-					// return the board to the original configuration
-					board.setPieceType(DestList[i_].first, DestList[i_].second, origDestPiece);
-					board.setTeamColour(DestList[i_].first, DestList[i_].second, origDestColour);
-					board.setPieceType(file, rank, Piece->GetPieceType());
-					board.setTeamColour(file, rank, Piece->GetColour());
-				}
+				colourIndex = 1; // the piece is the current team colour, so current team colour adds value
+			}
+			else if (board.getTeamColour(file, rank) != EColour::empty)
+			{
+				colourIndex = -1; // the piece is the other team colour, so other team subtracts value
+			}
+			
+			// classify based on type of piece
+			if (board.getPieceType(file, rank) == EPiece::pawn)
+			{
+				boardValue = boardValue + 2 * colourIndex;
+			}
+			else if (board.getPieceType(file, rank) == EPiece::knight)
+			{
+				boardValue = boardValue + 6 * colourIndex;
+			}
+			else if (board.getPieceType(file, rank) == EPiece::bishop)
+			{
+				boardValue = boardValue + 7 * colourIndex;
+			}
+			else if (board.getPieceType(file, rank) == EPiece::rook)
+			{
+				boardValue = boardValue + 10 * colourIndex;
+			}
+			else if (board.getPieceType(file, rank) == EPiece::queen)
+			{
+				boardValue = boardValue + 18 * colourIndex;
+			}
+			else if (board.getPieceType(file, rank) == EPiece::king)
+			{
+				boardValue = boardValue + 15 * colourIndex;
 			}
 		}
 	}
-
-	return OptimalMoves.at(OptimalMoves.size() - 1);
-}
-
-int CGame::CalculateBoardValue(EPiece piecetype)
-{
-	int boardvalue = 0;
-	// calculates the value of the board at the moment the function is called. Does not change the board.
-	
-	// ideas:
-
 	// sum the value of all material of the other team as a number to subtract
 	// // pawns increase in worth with increasing rank -- pawns on last rank are worth a queen
 	// // knights increase in worth with proximity to centre
@@ -1924,15 +2186,7 @@ int CGame::CalculateBoardValue(EPiece piecetype)
 	// // determine if lined up with one's own queen, rook, or bishop; or in range of knight, pawn, or king
 	// // assign points accordingly
 
-
-	if (piecetype == EPiece::pawn) { boardvalue = 100; }
-	if (piecetype == EPiece::knight) { boardvalue = 300; }
-	if (piecetype == EPiece::bishop) { boardvalue = 325; }
-	if (piecetype == EPiece::rook) { boardvalue = 500; }
-	if (piecetype == EPiece::queen) { boardvalue = 900; }
-	if (piecetype == EPiece::king) { boardvalue = 1; }
-
-	return boardvalue;
+	return boardValue;
 }
 
 void CGame::PerformCalculatedMove(std::pair<std::pair<int, int>, std::pair<int, int>> CalculatedMove)
