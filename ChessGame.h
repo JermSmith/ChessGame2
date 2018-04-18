@@ -161,8 +161,8 @@ private:
 	bool bClickOnPPBishop(std::pair<int, int>);
 	bool bClickOnPPKnight(std::pair<int, int>);
 
-	std::pair<std::pair<int, int>, std::pair<int, int>> CalculateOptimalMove();
-	int CalculateBoardValue(EPiece);
+	std::pair<std::pair<int, int>, std::pair<int, int>> CalculateOptimalMove(int);
+	int CalculateBoardValue(EPiece piecetype = EPiece::empty); // optional argument -- if none given, then assumed value of empty
 	void PerformCalculatedMove(std::pair<std::pair<int, int>, std::pair<int, int>>);
 
 	std::pair<int, int> findKingPosition(EColour);
